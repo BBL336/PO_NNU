@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海水状态方程 (Equation of State)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* 1. THE SETUP */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #e2e8f0;
+            display: grid;
+            gap: 30px;
+            grid-template-columns: 1fr;
+            margin: 0;
+            min-height: 100vh;
+            padding: 40px 0;
+            place-items: center;
+        }
+
+        .slide-container {
+            align-items: center;
+            background-color: #fcfbf6;
+            /* Soft Cream */
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            font-family: 'DM Sans', sans-serif;
+            height: 720px;
+            justify-content: center;
+            overflow: hidden;
+            padding: 60px;
+            position: relative;
+            width: 1280px;
+        }
+
+        /* Abstract Background Design */
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 100% 100%, rgba(17, 202, 160, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 0% 0%, rgba(0, 80, 136, 0.05) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .slide-container>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 2. CONSISTENT TYPOGRAPHY */
+        .slide-container h1,
+        .slide-container h2,
+        .slide-container h3,
+        .slide-container th {
+            color: #005088;
+            /* Deep Navy */
+            font-family: 'Merriweather', serif;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .slide-container p,
+        .slide-container li,
+        .slide-container td {
+            color: #334155;
+            /* Slate Gray */
+            font-family: 'DM Sans', sans-serif;
+            font-size: 18px;
+            line-height: 1.6;
+            margin: 0 0 15px 0;
+        }
+
+        .slide-container h1 {
+            font-size: 72px;
+            line-height: 1.2;
+            letter-spacing: 2px;
+        }
+
+        .slide-container h2.slide-title {
+            font-size: 42px;
+            margin-bottom: 40px;
+            text-align: left;
+            width: 100%;
+            border-bottom: 3px solid #11caa0;
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        .slide-container h3 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .content-area {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* FORMULA STYLING - STRICT COMPLIANCE */
+        math {
+            display: math;
+        }
+
+        #formula-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            border: 1px dashed #cbd5e1;
+            margin: 20px 0;
+        }
+
+        /* 3. LAYOUT DEFINITIONS */
+
+        /* Title Slide */
+        #slide1 {
+            background-color: #005088;
+        }
+
+        #slide1::before {
+            background-image:
+                radial-gradient(circle at 80% 20%, rgba(17, 202, 160, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(243, 240, 223, 0.1) 0%, transparent 50%);
+        }
+
+        .title-layout {
+            text-align: center;
+        }
+
+        .title-layout h1 {
+            color: #fcfbf6;
+        }
+
+        .title-layout .subtitle {
+            color: #11caa0;
+            font-size: 32px;
+            font-weight: 500;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* Bleed Image Right */
+        .bleed-image-layout {
+            align-items: start;
+            display: grid;
+            gap: 60px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            padding: 0;
+        }
+
+        .bleed-image-layout>.content-container {
+            padding: 60px 0 60px 60px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .bleed-image-layout .image-container {
+            height: 100%;
+            overflow: hidden;
+            width: 100%;
+            background: linear-gradient(135deg, #003a66 0%, #11caa0 100%);
+        }
+
+        .bleed-image-layout img.bleed-image-side {
+            border-radius: 0 12px 12px 0;
+            display: block;
+            height: 720px;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .bleed-text-side {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+
+        /* Tiled Text With Icons */
+        .tiled-content {
+            align-items: stretch;
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .tile {
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .tile .icon {
+            color: #11caa0;
+            font-size: 56px;
+            margin-bottom: 25px;
+        }
+
+        /* Two Column Layout */
+        .two-column {
+            align-items: stretch;
+            display: flex;
+            gap: 50px;
+            width: 100%;
+        }
+
+        .two-column>div {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .two-column.tiled>div {
+            background-color: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Image Right Text Left */
+        .image-wrapper {
+            border-radius: 12px;
+            height: 400px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #003a66 0%, #11caa0 100%);
+        }
+
+        .image-wrapper img {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        .styled-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .styled-list li {
+            position: relative;
+            padding-left: 45px;
+            margin-bottom: 25px;
+            font-size: 20px;
+        }
+
+        .styled-list i {
+            position: absolute;
+            left: 0;
+            top: 2px;
+            font-size: 26px;
+        }
+
+        .styled-list strong {
+            color: #005088;
+        }
+
+        /* Table Layout */
+        .table-layout {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .table-layout table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-layout th,
+        .table-layout td {
+            padding: 24px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .table-layout th {
+            background-color: #005088;
+            color: #ffffff;
+            font-size: 22px;
+        }
+
+        .table-layout tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-layout td {
+            font-size: 18px;
+        }
+
+        .table-layout tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Highlighted Numbers Layout */
+        .highlight-numbers-layout {
+            align-items: center;
+        }
+
+        .highlight-numbers-layout>div:first-child {
+            flex: 0 0 45%;
+            text-align: center;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .highlight-numbers-layout>div:last-child {
+            padding-left: 20px;
+        }
+
+        /* Quiz Layout */
+        .quiz-grid {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+            align-items: stretch;
+            margin-top: 20px;
+        }
+
+        .quiz-card {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 30px 40px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+
+        .quiz-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .quiz-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .quiz-card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .quiz-card .question {
+            font-weight: 500;
+            font-size: 19px;
+            flex-grow: 1;
+            margin-bottom: 25px;
+        }
+
+        .reveal-btn {
+            background: #005088;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        .reveal-btn:hover {
+            background: #003a66;
+        }
+
+        .answer {
+            display: none;
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 17px;
+            border-left: 5px solid #11caa0;
+            animation: fadeIn 0.4s;
+            line-height: 1.5;
+        }
+
+        .answer strong {
+            color: #11caa0;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Slide 1: Title_Slide -->
+    <div class="slide-container" id="slide1">
+        <div class="title-layout">
+            <h1>海水状态方程</h1>
+            <p class="subtitle">揭开海洋密度的秘密：温度、盐度与压力的博弈</p>
+        </div>
+    </div>
+
+    <!-- Slide 2: Bleed_Image_Right -->
+    <div class="slide-container bleed-image-layout" id="slide2">
+        <div class="content-container">
+            <h2 class="slide-title">什么是状态方程？</h2>
+            <div class="content-area">
+                <div class="bleed-text-side">
+                    <h3>决定海洋层结的核心</h3>
+                    <p>海水的密度（<math>
+                            <mi>&#x03C1;</mi>
+                        </math>）并不是一个固定不变的常数。密度的微小差异直接决定了海洋的垂直分层规律和驱动着庞大的全球热盐环流。</p>
+                    <p>海水状态方程本质上是一个<strong>经验公式</strong>，专门用于精确描述海水密度与三个核心独立变量之间的非线性相互作用。掌握它，是理解物理海洋动力学所有过程的基石。</p>
+                </div>
+            </div>
+        </div>
+        <div class="image-container">
+            <img class="bleed-image-side"
+                src="https://images.unsplash.com/photo-1518182170546-076616fdfaaf?auto=format&fit=crop&w=1000&q=80"
+                alt="冰山与海洋：温度与盐度差异的直观体现" onerror="this.style.display='none';">
+        </div>
+    </div>
+
+    <!-- Slide 3: Tiled_Text_With_Icons -->
+    <div class="slide-container" id="slide3">
+        <h2 class="slide-title">决定密度的三大独立支柱</h2>
+        <div class="content-area">
+            <div class="tiled-content">
+                <div class="tile">
+                    <div class="icon"><i class="fa-solid fa-temperature-half"></i></div>
+                    <h3>温度 (Temperature)</h3>
+                    <p>状态变量 <math>
+                            <mi>T</mi>
+                        </math>。温度变化引起海水的“热胀冷缩”，这是在中低纬度表层海洋中，导致密度剧烈变化的主导物理因素。</p>
+                </div>
+                <div class="tile">
+                    <div class="icon"><i class="fa-solid fa-flask"></i></div>
+                    <h3>盐度 (Salinity)</h3>
+                    <p>状态变量 <math>
+                            <mi>S</mi>
+                        </math>。水中溶解盐类质量的增加会直接使得海水比重变大，密度上升。这在极地结冰海域及近岸河口区域起决定性作用。</p>
+                </div>
+                <div class="tile">
+                    <div class="icon"><i class="fa-solid fa-arrow-down-up-across-line"></i></div>
+                    <h3>压力 (Pressure)</h3>
+                    <p>状态变量 <math>
+                            <mi>p</mi>
+                        </math>。尽管海水被认为是接近不可压缩的，但在深达数千米的深海环境，压力的累积增加依然会导致密度出现不可忽略的上升。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Two_Column_Tiled_Text (For Equations) -->
+    <div class="slide-container" id="slide4">
+        <h2 class="slide-title">状态方程的全微分形式</h2>
+        <div class="content-area">
+            <div class="two-column tiled">
+                <div>
+                    <h3>密度变化的绝对推导</h3>
+                    <p>由于密度 <math>
+                            <mi>&#x03C1;</mi>
+                        </math> 是 <math>
+                            <mi>T</mi>
+                        </math>, <math>
+                            <mi>S</mi>
+                        </math>, <math>
+                            <mi>p</mi>
+                        </math> 的多元函数，其全微分展开式严谨地表达为：</p>
+                    <div id="formula-container" style="font-size: 22px; color: #005088;">
+                        <math xmlns="http://www.w3.org/1998/Math/MathML">
+                            <mrow>
+                                <mi>d</mi>
+                                <mi>&#x03C1;</mi>
+                                <mo>=</mo>
+                                <msub>
+                                    <mrow>
+                                        <mo>(</mo>
+                                        <mfrac>
+                                            <mrow>
+                                                <mo>&#x2202;</mo>
+                                                <mi>&#x03C1;</mi>
+                                            </mrow>
+                                            <mrow>
+                                                <mo>&#x2202;</mo>
+                                                <mi>T</mi>
+                                            </mrow>
+                                        </mfrac>
+                                        <mo>)</mo>
+                                    </mrow>
+                                    <mrow>
+                                        <mi>S</mi>
+                                        <mo>,</mo>
+                                        <mi>p</mi>
+                                    </mrow>
+                                </msub>
+                                <mi>d</mi>
+                                <mi>T</mi>
+                                <mo>+</mo>
+                                <msub>
+                                    <mrow>
+                                        <mo>(</mo>
+                                        <mfrac>
+                                            <mrow>
+                                                <mo>&#x2202;</mo>
+                                                <mi>&#x03C1;</mi>
+                                            </mrow>
+                                            <mrow>
+                                                <mo>&#x2202;</mo>
+                                                <mi>S</mi>
+                                            </mrow>
+                                        </mfrac>
+                                        <mo>)</mo>
+                                    </mrow>
+                                    <mrow>
+                                        <mi>p</mi>
+                                        <mo>,</mo>
+                                        <mi>T</mi>
+                                    </mrow>
+                                </msub>
+                                <mi>d</mi>
+                                <mi>S</mi>
+                                <mo>+</mo>
+                                <msub>
+                                    <mrow>
+                                        <mo>(</mo>
+                                        <mfrac>
+                                            <mrow>
+                                                <mo>&#x2202;</mo>
+                                                <mi>&#x03C1;</mi>
+                                            </mrow>
+                                            <mrow>
+                                                <mo>&#x2202;</mo>
+                                                <mi>p</mi>
+                                            </mrow>
+                                        </mfrac>
+                                        <mo>)</mo>
+                                    </mrow>
+                                    <mrow>
+                                        <mi>T</mi>
+                                        <mo>,</mo>
+                                        <mi>S</mi>
+                                    </mrow>
+                                </msub>
+                                <mi>d</mi>
+                                <mi>p</mi>
+                            </mrow>
+                        </math>
+                    </div>
+                </div>
+                <div>
+                    <h3>比容变化的代数简化</h3>
+                    <p>引入比容 <math>
+                            <mi>&#x03B1;</mi>
+                        </math>（密度的倒数，即单位质量的体积），方程可转换为更直观的物理系数表达形式：</p>
+                    <div id="formula-container" style="font-size: 26px; color: #11caa0;">
+                        <math xmlns="http://www.w3.org/1998/Math/MathML">
+                            <mrow>
+                                <mfrac>
+                                    <mrow>
+                                        <mi>d</mi>
+                                        <mi>&#x03C1;</mi>
+                                    </mrow>
+                                    <mi>&#x03C1;</mi>
+                                </mfrac>
+                                <mo>=</mo>
+                                <mo>-</mo>
+                                <mfrac>
+                                    <mrow>
+                                        <mi>d</mi>
+                                        <mi>&#x03B1;</mi>
+                                    </mrow>
+                                    <mi>&#x03B1;</mi>
+                                </mfrac>
+                                <mo>=</mo>
+                                <mo>-</mo>
+                                <mi>e</mi>
+                                <mi>d</mi>
+                                <mi>T</mi>
+                                <mo>+</mo>
+                                <mi>b</mi>
+                                <mi>d</mi>
+                                <mi>S</mi>
+                                <mo>+</mo>
+                                <mi>K</mi>
+                                <mi>d</mi>
+                                <mi>p</mi>
+                            </mrow>
+                        </math>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Table -->
+    <div class="slide-container" id="slide5">
+        <h2 class="slide-title">三大核心物理系数解析</h2>
+        <div class="content-area">
+            <div class="table-layout">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>系数名称</th>
+                            <th>偏导符号</th>
+                            <th>物理学意义</th>
+                            <th>自然界平均量级</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>等压等盐热膨胀系数</td>
+                            <td><math>
+                                    <mi>e</mi>
+                                </math></td>
+                            <td>恒定压力与盐度下，温度升高导致海水体积膨胀、密度下降的速率。在常规海温下呈正值。</td>
+                            <td><math>
+                                    <mo>(</mo>
+                                    <mn>0</mn>
+                                    <mo>~</mo>
+                                    <mn>3</mn>
+                                    <mo>)</mo>
+                                    <mo>&#x00D7;</mo>
+                                    <msup>
+                                        <mn>10</mn>
+                                        <mrow>
+                                            <mo>-</mo>
+                                            <mn>4</mn>
+                                        </mrow>
+                                    </msup>
+                                    <mspace width="0.2em" />
+                                    <msup>
+                                        <mo>&#x2103;</mo>
+                                        <mrow>
+                                            <mo>-</mo>
+                                            <mn>1</mn>
+                                        </mrow>
+                                    </msup>
+                                </math></td>
+                        </tr>
+                        <tr>
+                            <td>等温等压盐度变化系数</td>
+                            <td><math>
+                                    <mi>b</mi>
+                                </math></td>
+                            <td>恒定温度与压力下，盐度增加导致海水收缩、密度变大的速率。</td>
+                            <td><math>
+                                    <mn>0.8</mn>
+                                    <mo>&#x00D7;</mo>
+                                    <msup>
+                                        <mn>10</mn>
+                                        <mrow>
+                                            <mo>-</mo>
+                                            <mn>3</mn>
+                                        </mrow>
+                                    </msup>
+                                    <mspace width="0.2em" />
+                                    <msup>
+                                        <mi>psu</mi>
+                                        <mrow>
+                                            <mo>-</mo>
+                                            <mn>1</mn>
+                                        </mrow>
+                                    </msup>
+                                </math></td>
+                        </tr>
+                        <tr>
+                            <td>等盐等温压缩系数</td>
+                            <td><math>
+                                    <mi>K</mi>
+                                </math></td>
+                            <td>恒定温度与盐度下，压力增加导致海水被物理压缩、密度强制变大的速率。</td>
+                            <td><math>
+                                    <mn>4.5</mn>
+                                    <mo>~</mo>
+                                    <mn>5</mn>
+                                    <mo>&#x00D7;</mo>
+                                    <msup>
+                                        <mn>10</mn>
+                                        <mrow>
+                                            <mo>-</mo>
+                                            <mn>10</mn>
+                                        </mrow>
+                                    </msup>
+                                    <mspace width="0.2em" />
+                                    <msup>
+                                        <mi>Pa</mi>
+                                        <mrow>
+                                            <mo>-</mo>
+                                            <mn>1</mn>
+                                        </mrow>
+                                    </msup>
+                                </math></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Image_Right_Text_Left -->
+    <div class="slide-container" id="slide6">
+        <h2 class="slide-title">经验法则：如何让密度剧增千分之一？</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div style="justify-content: center;">
+                    <h3 style="color: #11caa0;">微小变量背后的巨大力量</h3>
+                    <p>在物理海洋学中，海水绝对密度的变化通常极小。然而，即使是仅仅千分之一（<math>
+                            <mn>1</mn>
+                            <mo>/</mo>
+                            <mn>1000</mn>
+                        </math>）的增量，也足以引发强烈的下沉流并驱动深海循环。</p>
+                    <p style="margin-bottom: 25px;">根据状态方程经验测算，达成这一显著效果，可以通过以下三种<strong>独立途径之一</strong>实现：</p>
+                    <ul class="styled-list">
+                        <li><i class="fa-solid fa-temperature-arrow-down"
+                                style="color: #ef4444;"></i><strong>大幅降温：</strong> 温度下降 <math>
+                                <mn>5</mn>
+                                <mo>&#x2103;</mo>
+                            </math>（例如在标准盐度与气压下，由 <math>
+                                <mn>17</mn>
+                                <mo>&#x2103;</mo>
+                            </math> 骤降至 <math>
+                                <mn>12</mn>
+                                <mo>&#x2103;</mo>
+                            </math>）。</li>
+                        <li><i class="fa-solid fa-flask" style="color: #10b981;"></i><strong>强力增盐：</strong> 水体盐度急剧增加
+                            <math>
+                                <mn>1.2</mn>
+                            </math> 个单位。</li>
+                        <li><i class="fa-solid fa-arrow-down-long" style="color: #3b82f6;"></i><strong>深度加压：</strong>
+                            承受环境压力升高 <math>
+                                <mn>200</mn>
+                                <mo>&#x00D7;</mo>
+                                <msup>
+                                    <mn>10</mn>
+                                    <mn>4</mn>
+                                </msup>
+                                <mspace width="0.2em" />
+                                <mi>Pa</mi>
+                            </math>（相当于物体在海中下潜约 <math>
+                                <mn>200</mn>
+                            </math> 米深度）。</li>
+                    </ul>
+                </div>
+                <div style="justify-content: center;">
+                    <div class="image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1000&q=80"
+                            alt="深海与海洋层结" onerror="this.style.display='none';">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Slide 7: Highlighted_Numbers -->
+        <div class="slide-container" id="slide7">
+            <h2 class="slide-title">最简化的状态方程模型</h2>
+            <div class="content-area">
+                <div class="two-column highlight-numbers-layout">
+                    <div>
+                        <div id="formula-container"
+                            style="font-size: 54px; color: #11caa0; border: none; background: transparent; padding: 0; margin: 0;">
+                            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                                <mrow>
+                                    <mi>&#x03C1;</mi>
+                                    <mo>=</mo>
+                                    <msub>
+                                        <mi>&#x03C1;</mi>
+                                        <mn>0</mn>
+                                    </msub>
+                                    <mo>(</mo>
+                                    <mn>1</mn>
+                                    <mo>-</mo>
+                                    <mi>k</mi>
+                                    <mi>&#x03B8;</mi>
+                                    <mo>)</mo>
+                                </mrow>
+                            </math>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>包辛尼斯克近似的最佳拍档</h3>
+                        <p>在绝大多数海洋动力学理论研究与大型数值模式构建中，我们通常不需要代入极其复杂的全量非线性经验方程。</p>
+                        <p>当结合<strong>包辛尼斯克近似 (Boussinesq Approximation)</strong>（即假设海水近似不可压缩，且忽略背景盐度的剧烈波动）时，状态方程被大幅削减。
+                        </p>
+                        <p>在此简化模型中，我们仅考虑位温（<math>
+                                <mi>&#x03B8;</mi>
+                            </math>）对密度的线性膨胀影响。其中 <math>
+                                <msub>
+                                    <mi>&#x03C1;</mi>
+                                    <mn>0</mn>
+                                </msub>
+                            </math> 定义为 <math>
+                                <mn>0</mn>
+                                <mo>&#x2103;</mo>
+                            </math> 时的参考基准密度，<math>
+                                <mi>k</mi>
+                            </math> 则代表简化的常数热膨胀系数。这种降维极大地降低了海洋运动偏微分方程组的求解难度。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Interactive Quiz (Application) -->
+        <div class="slide-container" id="slide8">
+            <h2 class="slide-title">知识小测：密度的实际应用与情境</h2>
+            <div class="content-area">
+                <div class="quiz-grid">
+                    <!-- Quiz 1 -->
+                    <div class="quiz-card">
+                        <div class="quiz-icon" style="color: #ef4444;"><i class="fa-solid fa-ship"></i></div>
+                        <h3>情境一：跨洋航行</h3>
+                        <p class="question">一艘满载货物的轮船从赤道高温海域航行至极地冰冷海域（假设两地盐度相同）。请问船体的<b>吃水深度</b>会发生什么变化？</p>
+                        <button class="reveal-btn" data-target="ans1">查看解析</button>
+                        <div class="answer" id="ans1">
+                            <strong>吃水变浅（船会上浮）</strong>
+                            水温下降会导致海水密度增大。根据阿基米德浮力定律，在船只总重量不变的情况下，排开高密度海水所需的体积更小，因此船体会略微上浮。
+                        </div>
+                    </div>
+                    <!-- Quiz 2 -->
+                    <div class="quiz-card">
+                        <div class="quiz-icon" style="color: #10b981;"><i class="fa-solid fa-water"></i></div>
+                        <h3>情境二：河口交汇</h3>
+                        <p class="question">在长江口，巨量的淡水汇入东海。在这片交界水域的垂直剖面上，表层海水通常是偏向江水（淡水）还是偏向外海海水（咸水）？</p>
+                        <button class="reveal-btn" data-target="ans2">查看解析</button>
+                        <div class="answer" id="ans2">
+                            <strong>表层偏淡（形成冲淡水）</strong>
+                            淡水的盐度低，因此密度比外海的高盐度海水要小。密度较小的流体总是倾向于浮在密度大的流体上方，这在河口区域形成了典型的“盐度跃层”。
+                        </div>
+                    </div>
+                    <!-- Quiz 3 -->
+                    <div class="quiz-card">
+                        <div class="quiz-icon" style="color: #3b82f6;"><i class="fa-solid fa-arrow-down-long"></i></div>
+                        <h3>情境三：深海潜水器</h3>
+                        <p class="question">“奋斗者”号深潜器下潜到马里亚纳海沟底部。与海面相比，那里的海水密度有什么变化？这对下潜操作有什么影响？</p>
+                        <button class="reveal-btn" data-target="ans3">查看解析</button>
+                        <div class="answer" id="ans3">
+                            <strong>密度略微变大</strong>
+                            深海压力极大，海水会被物理压缩导致密度上升（即等压压缩效应）。随着下潜深度增加，潜水器受到的浮力会逐渐增加，因此需要抛卸压载铁才能灵活调节潜浮。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Script for interactive elements -->
+        <script>
+            function initQuiz() {
+                const revealBtns = document.querySelectorAll('.reveal-btn');
+                revealBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const targetId = e.target.getAttribute('data-target');
+                        const answerDiv = document.getElementById(targetId);
+
+                        if (answerDiv.style.display === 'block') {
+                            // 如果当前是显示状态，则隐藏，并恢复按钮文字
+                            answerDiv.style.display = 'none';
+                            e.target.textContent = '查看解析';
+                        } else {
+                            // 如果当前是隐藏状态，则显示，并改变按钮文字
+                            answerDiv.style.display = 'block';
+                            e.target.textContent = '收起解析';
+                        }
+                    });
+                });
+            }
+
+            // 确保 DOM 完全加载后再绑定事件，避免被沙盒环境阻塞
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initQuiz);
+            } else {
+                initQuiz();
+            }
+        </script>
+</body>
+
+</html>

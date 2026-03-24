@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海水动量方程实战测验</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX CSS & JS for Math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Option Styles */
+        .option-btn {
+            transition: all 0.2s ease;
+            border: 2px solid #334155;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #0ea5e9;
+            background-color: rgba(14, 165, 233, 0.1);
+            transform: translateX(5px);
+        }
+
+        .option-selected {
+            border-color: #0ea5e9;
+            background-color: rgba(14, 165, 233, 0.2);
+        }
+
+        .option-correct {
+            border-color: #10b981;
+            background-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .option-wrong {
+            border-color: #ef4444;
+            background-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen p-4 md:p-8 flex items-center justify-center">
+
+    <div class="max-w-4xl w-full">
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <h1
+                class="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-3">
+                <i class="fa-solid fa-water mr-2 text-cyan-400"></i> 海水动量方程实战测验
+            </h1>
+            <p class="text-slate-400 text-sm md:text-base"></p>
+        </header>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="glass-panel rounded-2xl p-6 md:p-10 relative overflow-hidden">
+
+            <!-- Question Navigator (Dots) -->
+            <div class="mb-8">
+                <div class="flex justify-between text-xs text-slate-400 font-bold mb-3">
+                    <span>题目导航 (点击可随时跳转)</span>
+                    <span id="score-text">当前得分: 0</span>
+                </div>
+                <div id="nav-dots" class="flex flex-wrap gap-2 justify-start md:justify-center">
+                    <!-- Dots will be injected here -->
+                </div>
+            </div>
+
+            <!-- Question Area -->
+            <div id="question-area" class="fade-in">
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold text-white mb-6 leading-relaxed">
+                    <!-- Question will be injected here -->
+                </h2>
+
+                <!-- Options -->
+                <div id="options-container" class="space-y-3 mb-8">
+                    <!-- Options will be injected here -->
+                </div>
+
+                <!-- Feedback Area (Hidden initially) -->
+                <div id="feedback-container" class="hidden p-5 rounded-lg border-l-4 mb-6 fade-in">
+                    <div class="flex items-start">
+                        <div id="feedback-icon" class="text-2xl mr-3 mt-1"></div>
+                        <div>
+                            <h3 id="feedback-title" class="text-lg font-bold mb-1"></h3>
+                            <p id="feedback-text" class="text-slate-200 text-sm md:text-base leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div
+                    class="flex flex-col md:flex-row justify-between items-center gap-4 mt-8 border-t border-slate-700 pt-6">
+                    <button id="prev-btn"
+                        class="w-full md:w-auto bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> 上一题
+                    </button>
+
+                    <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                        <button id="submit-btn"
+                            class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                            确认提交
+                        </button>
+                        <button id="next-btn"
+                            class="w-full md:w-auto bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            跳过本题 <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Area (Hidden initially) -->
+            <div id="results-area" class="hidden text-center py-10 fade-in">
+                <i class="fa-solid fa-trophy text-6xl text-yellow-400 mb-6"></i>
+                <h2 class="text-3xl font-bold text-white mb-2">测验正式结束！</h2>
+                <p class="text-slate-300 text-lg mb-6">您的最终得分是：<strong id="final-score"
+                        class="text-cyan-400 text-3xl mx-2"></strong></p>
+                <div id="evaluation-text"
+                    class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 text-left text-slate-200 mb-8 inline-block max-w-2xl">
+                    <!-- Evaluation text will be injected here -->
+                </div>
+                <br>
+                <button onclick="restartQuiz()"
+                    class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> 重新开始测试
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Logic & Data -->
+    <script>
+        const quizData = [
+            {
+                question: "在物理海洋学中，海洋垂直方向（Z轴）的动量方程通常被极度简化为“静压假定”（Hydrostatic Approximation）。这是因为哪两个力在垂直方向上占据了绝对的统治地位？",
+                options: [
+                    "表面风应力与底部摩擦力",
+                    "科氏力与水平压强梯度力",
+                    "重力与垂向压强梯度力",
+                    "局地加速度与平流加速度"
+                ],
+                correct: 2,
+                rationale: "垂直方向上，重力与水体自身产生的垂向压强梯度力比其他流体动力项（如垂直加速度）大几个数量级，形成静力平衡。"
+            },
+            {
+                question: "在北半球的一条自西向东流动的宽阔河流中（假设横向流速为0），南岸的水位往往高于北岸。根据动量方程，水位倾斜是为了产生一个怎样的力来平衡科氏力？",
+                options: [
+                    "向东的底部摩擦力",
+                    "向西的表面风应力",
+                    "向北的横向压强梯度力",
+                    "向南的横向压强梯度力"
+                ],
+                correct: 2,
+                rationale: "向东的水流受北半球科氏力影响向南（右）偏转，导致南岸水位抬升。这会产生一个由南向北的压强梯度力，完美抵消向南的科氏力。"
+            },
+            {
+                question: "在长江口等大尺度、地形平缓的河口区域进行动量尺度分析时，通常发现“平流加速度”（如 $u \\frac{\\partial u}{\\partial x}$）的量级远小于压强梯度力和局地加速度。这种情况下，我们通常可以对动量方程做何种处理？",
+                options: [
+                    "忽略科氏力的影响",
+                    "将方程进行线性化处理，忽略非线性的平流项",
+                    "忽略潮汐带来的局地加速度",
+                    "认为水流完全由风应力驱动"
+                ],
+                correct: 1,
+                rationale: "平流项是动量方程中的非线性项，当它的量级极小时（罗斯贝数极小），可以将其安全忽略，从而使偏微分方程线性化，大大简化数值求解难度。"
+            },
+            {
+                question: "假设长江口正刮着强劲的东风（风向西吹）。在**涨潮**期间（海水向西涌入河口），表面风应力和底部摩擦力的方向分别是怎样的？",
+                options: [
+                    "风应力向西，底部摩擦力向西",
+                    "风应力向东，底部摩擦力向东",
+                    "风应力向西，底部摩擦力向东",
+                    "风应力向东，底部摩擦力向西"
+                ],
+                correct: 2,
+                rationale: "东风向西吹，风应力向西拖曳表层海水；涨潮水流整体向西，底部摩擦力永远扮演“刹车”角色阻碍水流运动，故产生向东的摩擦力。"
+            },
+            {
+                question: "罗斯贝数（Rossby Number）是衡量地球物理流体中哪两种物理效应相对大小的重要无量纲数？",
+                options: [
+                    "重力与压强梯度力",
+                    "表面风应力与底部摩擦力",
+                    "流体自身的惯性力与地球自转产生的科氏力",
+                    "局地加速度与平流加速度"
+                ],
+                correct: 2,
+                rationale: "罗斯贝数 $Ro = U/(fL)$，分子代表流体自身的非线性平流惯性，分母代表科氏加速度，反映了旋转效应对流体的影响程度。"
+            },
+            {
+                question: "如果我们想利用“地转平衡”原理（$fu = g\\frac{\\Delta\\eta}{L}$），通过测量海峡两岸的水位差（$\\Delta\\eta$）来间接计算海峡内的平均流速 $u$。在低纬度且非常狭窄的海峡，这种方法最大的隐患是什么？",
+                options: [
+                    "忽略了表面风应力的影响",
+                    "科氏力过大导致流速计算值偏高",
+                    "极小的水位测量误差会被极大放大，导致流速计算出现巨大偏差",
+                    "海水密度的变化会使地转平衡方程完全失效"
+                ],
+                correct: 2,
+                rationale: "流速误差放大系数约为 $g/(fL)$。低纬度（科氏参数 $f$ 极小）和窄海峡（宽度 $L$ 极小）会使这个系数变得极大，导致毫米级的水位误差被放大成严重的流速偏差。"
+            },
+            {
+                question: "在北半球深海大洋中，如果海面持续刮正南风（风向正北吹），在达到“埃克曼平衡”后，表层海水的实际流向会偏向哪个方向？",
+                options: [
+                    "正北方向",
+                    "正东方向",
+                    "东北方向",
+                    "西北方向"
+                ],
+                correct: 2,
+                rationale: "在埃克曼平衡中，表层海水由于受到北半球科氏力向右的偏转作用，其实际流向会偏离风向的右侧（理论上呈 45° 角），即东北方向。"
+            },
+            {
+                question: "对比深海大洋的动量方程，在水深很浅的河口区（如水深仅 10 米），哪一项动量平衡项的作用会显著增加，甚至成为主导抵抗项？",
+                options: [
+                    "科氏力",
+                    "底部摩擦力",
+                    "重力加速度",
+                    "平流加速度"
+                ],
+                correct: 1,
+                rationale: "底部摩擦力的数学形式为 $\\tau_b / (\\rho H)$。在浅水环境中，水深 $H$ 极小，作为分母使得底摩擦的影响能够贯穿整个水柱，其相对量级显著增大。"
+            },
+            {
+                question: "在涨落潮明显的河口地带，驱动水体产生周期性往复运动（潮波）的“原动力”，在运动学动量方程中体现为哪一项？",
+                options: [
+                    "局地加速度",
+                    "科氏力",
+                    "压强梯度力",
+                    "表面风应力"
+                ],
+                correct: 2,
+                rationale: "外海潮波传入河口引起了水面的周期性倾斜（出现高低水位差），由此产生了巨大的水平压强梯度力，这正是驱动潮水往复流动的主导力量。局地加速度只是响应结果。"
+            },
+            {
+                question: "牛顿第二定律 $F=ma$ 应用于流体力学时，左边的“加速度 $a$”在欧拉固定参考系下必须展开为“物质导数” $\\frac{D u}{D t}$。它具体包含哪两部分？",
+                options: [
+                    "局地加速度与平流加速度",
+                    "科氏加速度与向心加速度",
+                    "重力加速度与压强梯度加速度",
+                    "摩擦减速度与切应力加速度"
+                ],
+                correct: 0,
+                rationale: "物质导数（随体导数）包含了代表固定空间点速度随时间变化的“局地加速度”，以及代表流体质点流经不均匀速度场而产生的“平流加速度”（或对流加速度）。"
+            },
+            {
+                question: "【计算题】某中纬度海峡（北纬 30°，科氏参数 $f \\approx 7.29 \\times 10^{-5} \\text{ s}^{-1}$）宽度为 $100 \\text{ km}$。实测发现海峡右岸水位比左岸高出 $0.5 \\text{ m}$。假设海峡内水流处于完全的“地转平衡”状态（取重力加速度 $g = 9.8 \\text{ m/s}^2$），请估算该海峡内的表层平均流速约为多少？",
+                options: [
+                    "0.35 m/s",
+                    "0.67 m/s",
+                    "1.25 m/s",
+                    "4.90 m/s"
+                ],
+                correct: 1,
+                rationale: "根据地转平衡公式 $fu = g\\frac{\\Delta\\eta}{L}$，可得 $u = \\frac{g\\Delta\\eta}{fL}$。代入数据：$u = \\frac{9.8 \\times 0.5}{7.29 \\times 10^{-5} \\times 100,000} = \\frac{4.9}{7.29} \\approx 0.67 \\text{ m/s}$。"
+            },
+            {
+                question: "【计算题】某河口正经历规律的半日潮（周期 $T \\approx 12.42 \\text{ h} = 44712 \\text{ s}$），测得主流向的最大潮水流速振幅为 $u_{max} = 1.2 \\text{ m/s}$。请利用“半周期平均差分法”，估算该水域动量方程中**局地加速度**（$\\frac{\\partial u}{\\partial t}$）的绝对量级。",
+                options: [
+                    "$0.54 \\times 10^{-4} \\text{ m/s}^2$",
+                    "$1.07 \\times 10^{-4} \\text{ m/s}^2$",
+                    "$1.74 \\times 10^{-4} \\text{ m/s}^2$",
+                    "$2.78 \\times 10^{-4} \\text{ m/s}^2$"
+                ],
+                correct: 1,
+                rationale: "半周期平均变化率计算法：在半个真实潮周期（$T/2 = 22356 \\text{ s}$）内，流速从正向最大 $1.2 \\text{ m/s}$ 变为反向最大 $-1.2 \\text{ m/s}$，速度变化量 $\\Delta u = 2u_{max} = 2.4 \\text{ m/s}$。局地加速度 $\\approx \\frac{\\Delta u}{T/2} = \\frac{2.4}{22356} \\approx 1.07 \\times 10^{-4} \\text{ m/s}^2$。"
+            }
+        ];
+
+        // Global State
+        let currentQuestion = 0;
+        let userAnswers = new Array(quizData.length).fill(null); // stores objects: { choice: idx, isCorrect: bool }
+        let selectedOption = null;
+        let confirmFinishState = false; // Used for "Submit Quiz" double check
+
+        // DOM Elements
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackText = document.getElementById('feedback-text');
+        const scoreText = document.getElementById('score-text');
+        const questionArea = document.getElementById('question-area');
+        const resultsArea = document.getElementById('results-area');
+        const navDotsContainer = document.getElementById('nav-dots');
+
+        // Render KaTeX Formulas
+        function renderMath() {
+            const container = document.getElementById('quiz-container');
+            if (container) {
+                renderMathInElement(container, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        // Initialize Navigation Dots
+        function initNavDots() {
+            navDotsContainer.innerHTML = '';
+            quizData.forEach((_, idx) => {
+                const dot = document.createElement('button');
+                dot.innerText = idx + 1;
+                dot.onclick = () => { currentQuestion = idx; loadQuestion(); };
+                navDotsContainer.appendChild(dot);
+            });
+        }
+
+        // Update Navigation Dots State
+        function updateNavDots() {
+            const dots = navDotsContainer.children;
+            let currentScore = 0;
+
+            for (let i = 0; i < dots.length; i++) {
+                let dot = dots[i];
+                // Base Classes
+                dot.className = `w-8 h-8 rounded-full text-xs font-bold transition-all flex items-center justify-center border-2 cursor-pointer shadow-sm `;
+
+                // Color State based on answers
+                if (userAnswers[i] === null) {
+                    dot.classList.add('bg-slate-700', 'text-slate-300', 'border-slate-600', 'hover:bg-slate-600');
+                } else if (userAnswers[i].isCorrect) {
+                    dot.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
+                    currentScore++;
+                } else {
+                    dot.classList.add('bg-red-600', 'text-white', 'border-red-500');
+                }
+
+                // Highlight Active Question
+                if (i === currentQuestion) {
+                    dot.classList.add('ring-2', 'ring-cyan-400', 'ring-offset-2', 'ring-offset-slate-800', 'scale-110');
+                }
+            }
+            scoreText.innerText = `当前得分: ${currentScore}`;
+        }
+
+        function loadQuestion() {
+            // Reset confirm state when moving around
+            resetConfirmState();
+
+            const q = quizData[currentQuestion];
+            const previousAnswer = userAnswers[currentQuestion];
+            selectedOption = previousAnswer ? previousAnswer.choice : null;
+
+            updateNavDots();
+
+            // Set Question Text
+            questionText.innerHTML = `<span class="text-cyan-400 mr-2">Q${currentQuestion + 1}.</span> ${q.question}`;
+
+            // Render Options
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-left p-4 rounded-lg bg-slate-800 text-slate-200 text-base md:text-lg cursor-pointer flex justify-between items-center';
+
+                let iconHtml = '';
+
+                // If previously answered, lock states and show correct/wrong
+                if (previousAnswer) {
+                    btn.disabled = true;
+                    if (index === q.correct) {
+                        btn.classList.add('option-correct');
+                        iconHtml = '<i class="fa-solid fa-check text-emerald-400 text-xl"></i>';
+                    } else if (index === previousAnswer.choice && !previousAnswer.isCorrect) {
+                        btn.classList.add('option-wrong');
+                        iconHtml = '<i class="fa-solid fa-xmark text-red-400 text-xl"></i>';
+                    } else {
+                        btn.style.opacity = '0.5';
+                    }
+                } else {
+                    // Interactive mode
+                    btn.onclick = () => selectOption(index, btn);
+                }
+
+                btn.innerHTML = `<span><span class="inline-block w-6 font-bold text-cyan-500">${String.fromCharCode(65 + index)}.</span> ${opt}</span> ${iconHtml}`;
+                optionsContainer.appendChild(btn);
+            });
+
+            // Update Control Buttons
+            prevBtn.disabled = currentQuestion === 0;
+
+            if (previousAnswer) {
+                // Already answered -> Hide Submit, Next button becomes "下一题/交卷"
+                submitBtn.classList.add('hidden');
+                feedbackContainer.classList.remove('hidden');
+                showFeedback(previousAnswer.isCorrect, q.rationale);
+            } else {
+                // Not answered -> Show Submit, Next button becomes "跳过"
+                submitBtn.classList.remove('hidden');
+                submitBtn.disabled = true; // Wait for selection
+                feedbackContainer.classList.add('hidden');
+            }
+
+            updateNextButtonText();
+            renderMath();
+        }
+
+        function selectOption(index, btn) {
+            selectedOption = index;
+            submitBtn.disabled = false;
+
+            const allBtns = optionsContainer.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('option-selected'));
+            btn.classList.add('option-selected');
+        }
+
+        function submitAnswer() {
+            if (selectedOption === null) return;
+
+            const q = quizData[currentQuestion];
+            const isCorrect = (selectedOption === q.correct);
+
+            // Record Answer
+            userAnswers[currentQuestion] = {
+                choice: selectedOption,
+                isCorrect: isCorrect
+            };
+
+            // Reload UI for this question to reflect answered state
+            loadQuestion();
+        }
+
+        function showFeedback(isCorrect, rationale) {
+            if (isCorrect) {
+                feedbackContainer.className = 'p-5 rounded-lg border-l-4 mb-6 fade-in bg-emerald-900/30 border-emerald-500';
+                feedbackIcon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+                feedbackTitle.innerText = '回答正确！';
+                feedbackTitle.className = 'text-lg font-bold mb-1 text-emerald-400';
+            } else {
+                feedbackContainer.className = 'p-5 rounded-lg border-l-4 mb-6 fade-in bg-red-900/30 border-red-500';
+                feedbackIcon.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-400"></i>';
+                feedbackTitle.innerText = '回答错误';
+                feedbackTitle.className = 'text-lg font-bold mb-1 text-red-400';
+            }
+            feedbackText.innerHTML = `<strong>原理解析：</strong><br>${rationale}`;
+        }
+
+        function handleNextAction() {
+            if (currentQuestion < quizData.length - 1) {
+                currentQuestion++;
+                loadQuestion();
+            } else {
+                // On last question, check if any are unanswered
+                const unansweredCount = userAnswers.filter(a => a === null).length;
+                if (unansweredCount > 0) {
+                    if (!confirmFinishState) {
+                        // First click: Warn user
+                        nextBtn.innerHTML = `还有 ${unansweredCount} 题未答，确认交卷？ <i class="fa-solid fa-triangle-exclamation ml-1"></i>`;
+                        nextBtn.classList.replace('bg-slate-700', 'bg-orange-600');
+                        nextBtn.classList.replace('hover:bg-slate-600', 'hover:bg-orange-500');
+                        confirmFinishState = true;
+                        return; // Stop here, wait for second click
+                    }
+                }
+                // Ready to finish
+                calculateAndShowResults();
+            }
+        }
+
+        function handlePrevAction() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+            }
+        }
+
+        function resetConfirmState() {
+            confirmFinishState = false;
+            nextBtn.classList.remove('bg-orange-600', 'hover:bg-orange-500');
+            nextBtn.classList.add('bg-slate-700', 'hover:bg-slate-600');
+        }
+
+        function updateNextButtonText() {
+            if (currentQuestion < quizData.length - 1) {
+                if (userAnswers[currentQuestion] === null) {
+                    nextBtn.innerHTML = '跳过本题 <i class="fa-solid fa-forward-step ml-2"></i>';
+                } else {
+                    nextBtn.innerHTML = '下一题 <i class="fa-solid fa-arrow-right ml-2"></i>';
+                }
+            } else {
+                nextBtn.innerHTML = '交卷并查看成绩 <i class="fa-solid fa-flag-checkered ml-2"></i>';
+                nextBtn.classList.replace('bg-slate-700', 'bg-cyan-600');
+                nextBtn.classList.replace('hover:bg-slate-600', 'hover:bg-cyan-500');
+            }
+        }
+
+        function calculateAndShowResults() {
+            questionArea.classList.add('hidden');
+            navDotsContainer.parentElement.classList.add('hidden');
+            resultsArea.classList.remove('hidden');
+
+            const finalScore = userAnswers.filter(a => a !== null && a.isCorrect).length;
+            const skipCount = userAnswers.filter(a => a === null).length;
+
+            const finalScoreEl = document.getElementById('final-score');
+            finalScoreEl.innerHTML = `${finalScore} / ${quizData.length}`;
+
+            if (skipCount > 0) {
+                finalScoreEl.innerHTML += `<span class="text-slate-400 text-lg ml-2 block mt-2 font-normal">（其中跳过/未答 ${skipCount} 题）</span>`;
+            }
+
+            const evaluation = document.getElementById('evaluation-text');
+            const ratio = finalScore / quizData.length;
+
+            if (ratio === 1) {
+                evaluation.innerHTML = "<strong>太出色了！满分！🏆</strong><br>您对动量方程、尺度分析、地转平衡以及埃克曼流等物理海洋学核心概念的掌握已经达到了专业水平，计算题也完全难不倒您！";
+            } else if (ratio >= 0.8) {
+                evaluation.innerHTML = "<strong>非常优秀！🌟</strong><br>您掌握了绝大部分的核心概念与计算方法。建议再复习一下答错或未答题目对应的知识点，您的理论框架将完美无瑕。";
+            } else if (ratio >= 0.6) {
+                evaluation.innerHTML = "<strong>表现不错！👍</strong><br>您已经建立了物理海洋学的基础概念框架。建议重新梳理一下各方程分项的物理意义，并在纸上多推导几次公式计算。";
+            } else {
+                evaluation.innerHTML = "<strong>继续加油！💪</strong><br>物理海洋学确实充满挑战。建议回到讲义中仔细推敲每一个受力项的作用方向和量级估算过程。";
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            userAnswers = new Array(quizData.length).fill(null);
+            resultsArea.classList.add('hidden');
+            questionArea.classList.remove('hidden');
+            navDotsContainer.parentElement.classList.remove('hidden');
+
+            // Reset "交卷" button styling back to normal "跳过" style
+            nextBtn.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
+            nextBtn.classList.add('bg-slate-700', 'hover:bg-slate-600');
+
+            initNavDots();
+            loadQuestion();
+        }
+
+        // Action Button Listeners
+        submitBtn.addEventListener('click', submitAnswer);
+        nextBtn.addEventListener('click', handleNextAction);
+        prevBtn.addEventListener('click', handlePrevAction);
+
+        // Start Quiz on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initNavDots();
+            loadQuestion();
+        });
+
+    </script>
+</body>
+
+</html>

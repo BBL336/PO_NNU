@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长江口三维动量平衡分析</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX CSS & JS for Math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+        .math-display { font-size: 1.15rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 0.5rem; border: 1px solid #334155; margin: 1rem 0; overflow-x: auto; text-align: center; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .term-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px dashed #334155; }
+        .term-row:last-child { border-bottom: none; }
+        .mag-bar { height: 6px; border-radius: 3px; margin-top: 6px; transition: width 0.5s ease-out; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header & Conditions -->
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 mb-4">
+                三维动量方程量级分析
+            </h1>
+            <p class="text-slate-400 text-lg mb-6">以一个理想工况为例，拆解 $x, y, z$ 三个方向的受力法则</p>
+            
+            <!-- 原题展示 Box -->
+            <div class="glass-panel rounded-xl p-6 text-left mb-6 border-l-4 border-cyan-500 shadow-lg">
+                <h3 class="text-xl font-bold text-cyan-300 mb-3"><i class="fa-solid fa-book-open mr-2"></i>实战原题</h3>
+                <p class="text-slate-200 leading-relaxed text-[15px] md:text-base">
+                    以长江口为对象开展动量平衡分析，分别计算动量方程中的各分项并比较其量级大小。<br>
+                    已知长江口潮差为 <strong class="text-white">2.7 m</strong>，潮波长度为 <strong class="text-white">400 km</strong>，所处纬度为<strong class="text-white">北纬 31°</strong>；<br>
+                    水流平均流速为 <strong class="text-white">0.6 m/s</strong>（仅存在东/西向流速，<strong class="text-yellow-300">涨潮向西，落潮向东</strong>，南北流速为 0），近底部流速为 <strong class="text-white">0.3 m/s</strong>，平均水深为 <strong class="text-white">10 m</strong>；<br>
+                    同时，区域风速为 <strong class="text-white">10 m/s</strong>（仅为东风，无其他风向）。<br>
+                    此外，已知空气密度为 <strong class="text-white">1.237 kg/m³</strong>，海水密度为 <strong class="text-white">1025 kg/m³</strong>，地球自转角速度 Ω 为 <strong class="text-white">7.29×10⁻⁵ 弧度/s</strong>。
+                </p>
+            </div>
+
+            <!-- Parameters Box -->
+            <div class="glass-panel rounded-xl p-6 text-left inline-block w-full">
+                <h3 class="text-xl font-bold text-blue-300 mb-4"><i class="fa-solid fa-list-check mr-2"></i>已知参数提取</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div class="bg-slate-800/50 p-3 rounded border border-slate-700">
+                        <span class="text-slate-400 block">潮波条件</span>
+                        <b class="text-white text-lg">$\Delta\eta = 2.7$ m</b><br>
+                        $L_x = 400$ km
+                    </div>
+                    <div class="bg-slate-800/50 p-3 rounded border border-slate-700">
+                        <span class="text-slate-400 block">往复流速场</span>
+                        <b class="text-white text-lg">$|\bar{u}| = 0.6$ m/s</b><br>
+                        <span class="text-yellow-400">涨潮向西 / 落潮向东</span>
+                    </div>
+                    <div class="bg-slate-800/50 p-3 rounded border border-slate-700">
+                        <span class="text-slate-400 block">外部驱动</span>
+                        <b class="text-white text-lg">东风 $W = 10$ m/s</b><br>
+                        北纬 $\phi = 31^\circ$
+                    </div>
+                    <div class="bg-slate-800/50 p-3 rounded border border-slate-700">
+                        <span class="text-slate-400 block">底边界</span>
+                        <b class="text-white text-lg">$|\bar{u}_b| = 0.3$ m/s</b><br>
+                        $H = 10$ m
+                    </div>
+                </div>
+                <div class="mt-4 bg-blue-900/30 p-3 rounded border border-blue-500/20 text-xs text-slate-300 text-left">
+                    <b class="text-blue-300">💡 尺度估算法：</b>按正/余弦潮波假定，最大流速振幅 $u_{max} = |\bar{u}| \times (\pi/2) \approx 0.942$ m/s。<br>
+                    加速度估算取<b class="text-white">半个周期/半个波长</b>内从最大到最小的平均变化率；压强梯度力的差分估算同样取半波长内。<br>
+                    <span class="text-slate-400">* 隐含常数: 重力 $g=9.8$，底摩擦 $C_f = 0.0025$，风拖曳 $C_d = 0.0015$，$f \approx 7.51 \times 10^{-5}$ s⁻¹，M2潮周期 $T \approx 12.42$ h。</span>
+                </div>
+            </div>
+            
+            <!-- 物理过程可视化区域 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <!-- 潮波特征可视化 -->
+                <div class="glass-panel rounded-xl p-6 relative overflow-hidden text-left shadow-lg border-t border-cyan-500/30">
+                    <h3 class="text-xl font-bold text-cyan-300 mb-2 relative z-10 flex items-center">
+                        <i class="fa-solid fa-water mr-2"></i> 潮波起伏形态 $\eta(x,t)$
+                    </h3>
+                    <p class="text-slate-300 text-sm mb-4 relative z-10">
+                        潮波在河口传播时引起水面起伏，从而产生了驱动水流的主导力——**压强梯度力**。下方的动态图展示了振幅为 1.35m 的潮波面貌。
+                    </p>
+                    <div class="relative w-full h-40 bg-slate-900/80 rounded-lg border border-slate-700 flex items-end">
+                        <canvas id="waveCanvas" class="absolute top-0 left-0 w-full h-full rounded-lg"></canvas>
+                        <div class="absolute w-full flex justify-between px-4 pb-2 text-xs text-cyan-500/50 font-mono">
+                            <span>x = 0</span>
+                            <span>$L_x = 400$ km</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 摩擦力特征可视化 -->
+                <div class="glass-panel rounded-xl p-6 relative overflow-hidden text-left shadow-lg border-t border-orange-500/30">
+                    <h3 class="text-xl font-bold text-orange-300 mb-2 relative z-10 flex items-center">
+                        <i class="fa-solid fa-wind mr-2"></i> 边界应力的同向/反向博弈
+                    </h3>
+                    <p class="text-slate-300 text-sm mb-4 relative z-10">
+                        恒定东风（向西吹）与往复潮流相遇：<b class="text-yellow-400">落潮向东</b>时底摩擦向西，两者同向叠加（如右图）；<b class="text-red-400">涨潮向西</b>时底摩擦向东，两者反向对抗！
+                    </p>
+                    <div class="relative w-full h-40 bg-slate-900/80 rounded-lg border border-slate-700 flex items-center justify-center">
+                        <svg viewBox="0 0 400 160" class="w-full h-full p-2">
+                            <!-- Background Water -->
+                            <rect x="0" y="30" width="400" height="100" fill="#0ea5e9" fill-opacity="0.1" />
+                            
+                            <!-- Surface Line -->
+                            <line x1="0" y1="30" x2="400" y2="30" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4" />
+                            <text x="210" y="20" fill="#facc15" font-size="12" font-weight="bold">风应力 (恒定东风向西吹)</text>
+                            <!-- Wind Force Arrow (Westward) -->
+                            <path d="M 190 15 L 110 15 M 120 10 L 110 15 L 120 20" stroke="#facc15" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            
+                            <!-- Bottom Line -->
+                            <rect x="0" y="130" width="400" height="30" fill="#1e293b" rx="4"/>
+                            <line x1="0" y1="130" x2="400" y2="130" stroke="#475569" stroke-width="3" />
+                            <text x="210" y="150" fill="#fb923c" font-size="12" font-weight="bold">底摩擦 (落潮期：阻力向西)</text>
+                            <!-- Bottom Friction Arrow (Westward) -->
+                            <path d="M 190 145 L 110 145 M 120 140 L 110 145 L 120 150" stroke="#fb923c" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+                            <!-- Velocity Profile (Boundary Layer - Eastward Flow) -->
+                            <g transform="translate(180, 0)">
+                                <!-- Axis -->
+                                <line x1="0" y1="30" x2="0" y2="130" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+                                <!-- Flow Vectors (Eastward / Ebb Tide) -->
+                                <path d="M 0 30 L 120 30 M 110 25 L 120 30 L 110 35" stroke="#38bdf8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M 0 55 L 112 55 M 102 50 L 112 55 L 102 60" stroke="#38bdf8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M 0 80 L 95 80 M 85 75 L 95 80 L 85 85" stroke="#38bdf8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M 0 105 L 65 105 M 55 100 L 65 105 L 55 110" stroke="#38bdf8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M 0 120 L 35 120 M 25 115 L 35 120 L 25 125" stroke="#38bdf8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <!-- Profile Curve -->
+                                <path d="M 120 30 Q 110 110 0 130" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,3" fill="none"/>
+                                <text x="130" y="85" fill="#38bdf8" font-size="12">落潮流 (表层向东最大)</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 3D Grid Analysis -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- X Direction (East-West) -->
+            <div class="glass-panel rounded-2xl p-6 border-t-4 border-blue-500 hover:-translate-y-1 transition-transform duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-blue-400">X 方向 (主流向)</h2>
+                    <span class="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-xs font-bold border border-blue-500/30">东西轴</span>
+                </div>
+                <p class="text-sm text-slate-300 mb-2">水体实际发生运动的方向，所有动态力量在此激烈角逐。</p>
+                
+                <div class="math-display text-blue-100 text-[0.85rem] leading-relaxed">
+                    $$ \underbrace{\frac{\partial u}{\partial t}}_{\text{局地加速度}} + \underbrace{u\frac{\partial u}{\partial x} + v\frac{\partial u}{\partial y} + w\frac{\partial u}{\partial z}}_{\text{平流加速度}} = \underbrace{-\frac{1}{\rho}\frac{\partial p}{\partial x}}_{\text{压强梯度力}} + \underbrace{fv}_{\text{科氏力}} + \underbrace{\frac{\tau_{wx}}{\rho H}}_{\text{表面风应力}} - \underbrace{\frac{\tau_{bx}}{\rho H}}_{\text{底部摩擦力}} $$
+                </div>
+
+                <h3 class="font-bold text-white mt-6 mb-3 border-b border-slate-700 pb-2 flex items-center justify-between">
+                    <span>振幅绝对量级估算 $(m/s^2)$</span>
+                    <span class="text-xs font-normal text-slate-400 bg-slate-800 px-2 py-1 rounded">按方程从左到右</span>
+                </h3>
+                
+                <div class="space-y-1 text-sm">
+                    <!-- 1. 局地加速度 -->
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-indigo-400 font-bold block">1. 局地加速度 (半周期均值)</span>
+                            <span class="text-xs text-slate-400">$\Delta u / (T/2)$</span>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <span class="font-mono text-[15px]">8.4 × 10⁻⁵</span>
+                            <div class="mag-bar bg-indigo-500" style="width: 62%;"></div>
+                        </div>
+                    </div>
+                    <!-- 2. 平流加速度 -->
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-pink-400 font-bold block">2. 平流加速度 (半波长均值)</span>
+                            <span class="text-xs text-slate-400">$\bar{u}(\Delta u / (L_x/2))$</span>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <span class="font-mono text-pink-300 text-[15px]">5.6 × 10⁻⁶</span>
+                            <div class="mag-bar bg-pink-500" style="width: 4%;"></div>
+                        </div>
+                    </div>
+                    <!-- 3. 压强梯度力 -->
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-red-400 font-bold block">3. 压强梯度力 (半波长均值)</span>
+                            <span class="text-xs text-slate-400">$g(\Delta\eta / (L_x/2))$</span>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <span class="font-mono font-bold text-red-300 text-[15px]">1.35 × 10⁻⁴</span>
+                            <div class="mag-bar bg-red-500 w-full" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <!-- 4. 科氏力 -->
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-slate-500 font-bold block">4. 科氏力</span>
+                            <span class="text-xs text-slate-400">$fv$ (因 $v=0$)</span>
+                        </div>
+                        <div class="text-right w-1/3 text-slate-500">
+                            <span class="font-mono text-[15px]">0</span>
+                            <div class="mag-bar bg-slate-700" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <!-- 5. 表面风应力 -->
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-yellow-400 font-bold block">5. 表面风应力</span>
+                            <span class="text-xs text-slate-400">$\rho_a C_d W^2 / (\rho H)$</span>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <span class="font-mono text-[15px]">1.81 × 10⁻⁵</span>
+                            <div class="mag-bar bg-yellow-500" style="width: 13%;"></div>
+                        </div>
+                    </div>
+                    <!-- 6. 底部摩擦力 -->
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-orange-400 font-bold block">6. 底部摩擦力</span>
+                            <span class="text-xs text-slate-400">$C_f \bar{u}_b^2 / H$</span>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <span class="font-mono text-[15px]">2.25 × 10⁻⁵</span>
+                            <div class="mag-bar bg-orange-500" style="width: 17%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-blue-900/30 p-4 rounded border border-blue-500/30 text-[13px] md:text-sm leading-relaxed">
+                    <b class="text-blue-300 block mb-1">💡 结论：长波平衡与摩擦力的动态博弈</b>
+                    以半周期/波长差分估算：<b class="text-indigo-300">局地加速度</b>（$8.4 \times 10^{-5}$）与<b class="text-red-300">压强梯度力</b>（$1.35 \times 10^{-4}$）处于同一主导量级，共同维持潮波往复。<br><br>
+                    由于河口是涨落潮交替环境，<b class="text-yellow-300">风应力</b>（$1.81 \times 10^{-5}$）与<b class="text-orange-300">底摩擦力</b>（$2.25 \times 10^{-5}$）产生了动态博弈：当吹东风（向西）且<b class="text-white">落潮（向东）</b>时，底摩擦向西，两者同向叠加构成巨大阻力；而<b class="text-white">涨潮（向西）</b>时，底摩擦转为向东，两者反向互相抵消。最后，<b class="text-pink-300">平流加速度</b>仅占主导力的 4% 左右（$5.6 \times 10^{-6}$），在主体中可线性化忽略。
+                </div>
+            </div>
+
+            <!-- Y Direction (North-South) -->
+            <div class="glass-panel rounded-2xl p-6 border-t-4 border-emerald-500 hover:-translate-y-1 transition-transform duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-emerald-400">Y 方向 (横向)</h2>
+                    <span class="bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-500/30">南北轴</span>
+                </div>
+                <p class="text-sm text-slate-300 mb-2">虽无水流 ($v=0$)，但水体在暗中较劲，是地转偏向力与压强的舞台。</p>
+                
+                <div class="math-display text-emerald-100 text-[0.85rem] leading-relaxed">
+                    $$ \underbrace{\frac{Dv}{Dt}}_{\text{因 } v=0 \text{ 为 } 0} = \underbrace{-\frac{1}{\rho}\frac{\partial p}{\partial y}}_{\text{压强梯度力}} - \underbrace{fu}_{\text{科氏力}} + \underbrace{\frac{\tau_{wy}}{\rho H} - \frac{\tau_{by}}{\rho H}}_{\text{因无横向风/流 为 } 0} $$
+                </div>
+
+                <h3 class="font-bold text-white mt-6 mb-3 border-b border-slate-700 pb-2">绝对量级估算 $(m/s^2)$</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-emerald-400 font-bold block">科氏力最大振幅</span>
+                            <span class="text-xs text-slate-400">$-f u_{max}$ (随涨落潮流向反转)</span>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <span class="font-mono text-emerald-300 text-[15px]">±7.07 × 10⁻⁵</span>
+                            <div class="mag-bar bg-emerald-500" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-teal-400 font-bold block">横向压强梯度力</span>
+                            <span class="text-xs text-slate-400">$-(1/\rho)(\partial p/\partial y)$</span>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <span class="font-mono text-teal-300 text-[15px]">∓7.07 × 10⁻⁵</span>
+                            <div class="mag-bar bg-teal-500" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="term-row text-slate-500">
+                        <div>
+                            <span class="font-bold block">其它加速度与应力项</span>
+                            <span class="text-xs">因设定 $v=0$ 恒成立</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-mono">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-emerald-900/30 p-4 rounded border border-emerald-500/30 text-[13px] md:text-sm mt-auto flex flex-col gap-3">
+                    <div>
+                        <b class="text-emerald-300 block mb-1">💡 结论：地转摆荡效应 (Geostrophic Reversal)</b>
+                        由于潮汐的往复，Y方向的动力学平衡发生了戏剧性的“跷跷板”反转：
+                        <ul class="list-disc pl-5 mt-1 text-emerald-100">
+                            <li><b class="text-yellow-300">落潮向东流</b>时，受科氏力向南挤压，产生向北压强梯度力（**南岸水位高**）。</li>
+                            <li><b class="text-red-300">涨潮向西流</b>时，受科氏力向北挤压，产生向南压强梯度力（**北岸水位高**）。</li>
+                        </ul>
+                    </div>
+                    <div class="bg-emerald-950/60 p-3 rounded-lg border border-emerald-500/30 shadow-inner">
+                        <b class="text-teal-300 block mb-1"><i class="fa-solid fa-calculator mr-1"></i> 实战计算：南北岸最大水位差</b>
+                        由平衡方程 $|f u_{max}| = g \frac{\Delta\eta_y}{L_y}$，代入河宽 $L_y = 20\text{ km}$ 与 $g = 9.8\text{ m/s}^2$：
+                        <div class="text-emerald-100 mt-1">
+                            水位差振幅 $\Delta\eta_y \approx \frac{7.07\times 10^{-5} \times 20000}{9.8} \approx \mathbf{14.4 \text{ cm}}$
+                        </div>
+                        <div class="mt-2 text-teal-400/90 italic text-xs">👉 结论：受地球自转影响，涨落潮期间长江口南北岸水位呈现周期性摆荡，最大差值可达 14.4 厘米！</div>
+                    </div>
+
+                    <!-- 观测误差放大警示 -->
+                    <div class="bg-red-950/40 p-3 rounded-lg border border-red-500/30 shadow-inner mt-2">
+                        <b class="text-red-300 block mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 反向思考：间接测流与观测误差的放大</b>
+                        这个地转平衡关系同样提供了一种<b class="text-white">间接测流速</b>的方法：只要在南北岸各放一个验潮仪测出水位差 $\Delta\eta_y$，就能反推海峡内的平均流速 $u = \frac{g \Delta\eta_y}{f L_y}$。<br>
+                        <ul class="list-disc pl-5 mt-1 space-y-1 text-red-200/90">
+                            <li><b class="text-red-200">误差传递效应：</b> 根据推导，流速误差为 $\delta u = \frac{g}{f L_y} \delta(\Delta\eta_y)$。</li>
+                            <li>代入本题参数：误差放大系数 $\frac{g}{f L_y} \approx \frac{9.8}{7.51\times 10^{-5} \times 20000} \approx \mathbf{6.52 \text{ s}^{-1}}$。</li>
+                            <li>这意味着：南北两岸的水位测量仅仅出现 <b class="text-white">1 cm</b> 的微小误差，反推的流速就会产生约 <b class="text-white">6.5 cm/s</b> 的巨大偏差！若波浪或风力导致两岸出现 5 cm 的异常水头，流速计算偏差将高达约 0.33 m/s（超过了本题平均流速的一半）。</li>
+                        </ul>
+                        <div class="mt-2 text-red-300/80 italic text-xs">👉 结论：由于 $f L_y$ 的乘积通常很小（尤其是中低纬度或窄河口），基于地转方程的间接反演测流方法对水位观测仪器的精度和抗干扰能力要求极高！</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Z Direction (Vertical) -->
+            <div class="glass-panel rounded-2xl p-6 border-t-4 border-purple-500 hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-purple-400">Z 方向 (垂向)</h2>
+                    <span class="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-xs font-bold border border-purple-500/30">上下轴</span>
+                </div>
+                <p class="text-sm text-slate-300 mb-2">重力具有绝对统治力，垂直方向的运动方程被极度简化。</p>
+                
+                <div class="math-display text-purple-100 text-[0.85rem] leading-relaxed">
+                    $$ \underbrace{\frac{Dw}{Dt}}_{w \text{ 极小，趋于 } 0} = \underbrace{-\frac{1}{\rho}\frac{\partial p}{\partial z}}_{\text{压强梯度力}} - \underbrace{g}_{\text{重力加速度}} $$
+                </div>
+
+                <h3 class="font-bold text-white mt-6 mb-3 border-b border-slate-700 pb-2">绝对量级估算 $(m/s^2)$</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-purple-400 font-bold block">重力加速度</span>
+                            <span class="text-xs text-slate-400">$-g$</span>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <span class="font-mono text-purple-300 text-[15px]">~ 9.8</span>
+                            <div class="mag-bar bg-purple-500" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-fuchsia-400 font-bold block">垂向压强梯度力</span>
+                            <span class="text-xs text-slate-400">$-(1/\rho)(\partial p/\partial z)$</span>
+                        </div>
+                        <div class="text-right w-1/3">
+                            <span class="font-mono text-fuchsia-300 text-[15px]">~ 9.8</span>
+                            <div class="mag-bar bg-fuchsia-500" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="term-row">
+                        <div class="pr-2">
+                            <span class="text-slate-500 font-bold block">垂向加速度</span>
+                            <span class="text-xs text-slate-400">$\partial w / \partial t$ (由于 $w$ 极小)</span>
+                        </div>
+                        <div class="text-right w-1/3 text-slate-500">
+                            <span class="font-mono text-[15px]">~ 10⁻⁸</span>
+                            <div class="mag-bar bg-slate-700" style="width: 1%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-purple-900/30 p-4 rounded border border-purple-500/30 text-[13px] md:text-sm mt-auto">
+                    <b class="text-purple-300 block mb-1">💡 结论：静压假定 (Hydrostatic)</b>
+                    对比发现，重力 $9.8$ 的量级比流体的微弱垂直加速度（$10^{-8}$）大了将近**十亿倍**！因此，在绝大多数物理海洋学问题中，我们可以毫不犹豫地划掉等号左边的所有项，直接认定垂向压强完全由上方水柱的重量决定（即 $p = -\rho g z$）。
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- KaTeX and Canvas Initialization -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Render Math
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ],
+                throwOnError : false
+            });
+            
+            // Render Wave Animation
+            initWaveCanvas();
+        });
+
+        function initWaveCanvas() {
+            const canvas = document.getElementById('waveCanvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Fix blurriness on High DPI displays
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            
+            const width = rect.width;
+            const height = rect.height;
+            let time = 0;
+            
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+                
+                const centerY = height / 2;
+                const amplitude = height * 0.35; 
+                const frequency = (Math.PI * 2) / width; 
+                const speed = 0.05; 
+                
+                // Draw water fill
+                ctx.beginPath();
+                ctx.moveTo(0, height);
+                for(let x = 0; x <= width; x += 2) {
+                    const y = centerY + amplitude * Math.cos(frequency * x - time * speed);
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineTo(width, height);
+                ctx.lineTo(0, height);
+                ctx.closePath();
+                const grad = ctx.createLinearGradient(0, 0, 0, height);
+                grad.addColorStop(0, 'rgba(6, 182, 212, 0.4)'); // cyan
+                grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                // Draw wave surface line
+                ctx.beginPath();
+                ctx.strokeStyle = '#22d3ee'; // cyan-400
+                ctx.lineWidth = 3;
+                for(let x = 0; x <= width; x += 2) {
+                    const y = centerY + amplitude * Math.cos(frequency * x - time * speed);
+                    if(x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // Draw mean sea level line
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)'; // slate-400
+                ctx.setLineDash([5, 5]);
+                ctx.moveTo(0, centerY);
+                ctx.lineTo(width, centerY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                time++;
+                requestAnimationFrame(draw);
+            }
+            
+            draw();
+        }
+    </script>
+</body>
+</html>

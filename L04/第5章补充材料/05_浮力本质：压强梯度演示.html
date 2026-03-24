@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浮力本质：垂向压强梯度演示</title>
+    <!-- 引入 KaTeX 用于数学公式渲染 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; }
+        .canvas-container { 
+            position: relative; 
+            width: 100%; 
+            height: 500px; 
+            background: #ffffff; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            border: 1px solid #e2e8f0;
+        }
+        .water { 
+            position: absolute; 
+            bottom: 0; 
+            background: linear-gradient(to top, rgba(37, 99, 235, 0.4), rgba(59, 130, 246, 0.2)); 
+            transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            border-top: 2px solid #3b82f6; 
+            width: 100%; 
+            z-index: 10;
+        }
+        .block { 
+            position: absolute; 
+            background: #d97706; 
+            border: 2px solid #92400e; 
+            transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            font-weight: 600;
+            z-index: 20;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .pressure-arrow {
+            position: absolute;
+            width: 2px;
+            background-color: #ef4444;
+            transition: all 0.4s ease;
+            z-index: 30;
+        }
+        .pressure-arrow::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -4px;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 7px solid #ef4444;
+        }
+        .container-wall { 
+            position: absolute; 
+            bottom: 0; 
+            border: 4px solid #475569; 
+            border-top: none; 
+            height: 450px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            transition: width 0.4s ease;
+        }
+        /* KaTeX 公式微调 */
+        .katex { font-size: 1.1em; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-6">
+            <h1 class="text-3xl font-bold text-slate-900">浮力的本质：垂向压强梯度力</h1>
+            <p class="text-slate-500 mt-2">通过 1L 水浮起 4L 木块的案例，观察压强分布如何形成浮力。</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">实验参数控制</h2>
+                    
+                    <div class="mb-6">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-medium">木块密度 $\rho_{木}$</span>
+                            <span id="density-val" class="text-sm font-mono text-blue-600 font-bold">0.60 kg/L</span>
+                        </div>
+                        <input type="range" id="density" min="0.1" max="1.1" step="0.05" value="0.6" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    </div>
+
+                    <div class="mb-6">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-medium">侧边缝隙宽度</span>
+                            <span id="gap-val" class="text-sm font-mono text-blue-600 font-bold">中等</span>
+                        </div>
+                        <input type="range" id="gap" min="2" max="60" step="1" value="25" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100">
+                        <div class="flex items-center text-xs text-slate-500 mb-2">
+                            <div class="w-3 h-3 bg-red-500 mr-2 rounded-full"></div> 红色箭头 = 压强矢量 $\vec{P}$
+                        </div>
+                        <p class="text-[11px] text-slate-400 italic">观察：底部箭头明显长于顶部箭头，反映了压强随深度的梯度变化。</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 p-6 rounded-2xl text-white shadow-xl">
+                    <h3 class="text-orange-400 font-bold text-sm mb-4 flex items-center">
+                        <span class="mr-2">实时物理数据分析</span>
+                    </h3>
+                    <div class="space-y-4 font-sans text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-400">实际水量 $V_{water}$:</span>
+                            <span class="text-green-400 font-mono">1.00 L</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                            <span class="text-slate-400">排开体积 $V_{dis}$:</span>
+                            <span id="v-displaced" class="text-blue-400 font-mono">2.40 L</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-400">顶部压强 $P_{top}$:</span>
+                            <span id="p-top-formula" class="font-mono text-xs"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-400">底部压强 $P_{bot}$:</span>
+                            <span id="p-bot-formula" class="font-mono text-xs text-orange-400"></span>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-700">
+                            <div class="text-[11px] text-slate-500 mb-1">浮力本质 (Net Force):</div>
+                            <div id="buoyancy-logic" class="text-center bg-slate-800 p-2 rounded text-xs italic"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="canvas-container" id="stage">
+                    <div id="container-ui" class="container-wall">
+                        <div id="water-ui" class="water"></div>
+                        <div id="block-ui" class="block">
+                            <span class="text-[10px] uppercase tracking-widest opacity-70">Block 4L</span>
+                            <div class="text-xl font-bold my-1">$\uparrow$</div>
+                            <div id="f-label" class="text-[10px] font-mono">$F_{net} = G$</div>
+                        </div>
+                        <div id="vector-overlay"></div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                    <h4 class="text-slate-800 font-bold text-base mb-2">物理原理解析：垂向压强梯度</h4>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                        浮力并非源于“水的总量”，而是源于流体静力学压强差：$$\Delta P = \rho g \Delta h$$
+                    </p>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        由于容器极其狭窄，1L 的水在垂直方向上形成了巨大的高度差。木块底面所在的深度远大于顶面，因此底部的向上压强 $P_{bot}$ 远大于顶部的向下压强 $P_{top}$。这种<b>压强梯度带来的垂直合力</b>正是浮力的物理来源。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const densityInput = document.getElementById('density');
+        const gapInput = document.getElementById('gap');
+        const blockUI = document.getElementById('block-ui');
+        const waterUI = document.getElementById('water-ui');
+        const containerUI = document.getElementById('container-ui');
+        const vectorOverlay = document.getElementById('vector-overlay');
+
+        function updateArrows(waterHeight, blockBottom, blockHeight, blockWidth, pBotScale) {
+            vectorOverlay.innerHTML = '';
+            
+            // 底部箭头
+            const numBottomArrows = 5;
+            for(let i=0; i<numBottomArrows; i++) {
+                const arrow = document.createElement('div');
+                arrow.className = 'pressure-arrow';
+                const xPos = (blockWidth / (numBottomArrows - 1)) * i;
+                const arrowLen = Math.min(pBotScale * 0.8, 80);
+                arrow.style.left = `calc(50% - ${blockWidth/2}px + ${xPos}px)`;
+                arrow.style.bottom = `${blockBottom - arrowLen}px`;
+                arrow.style.height = `${arrowLen}px`;
+                vectorOverlay.appendChild(arrow);
+            }
+
+            // 侧面箭头 (展示压强梯度)
+            const numSideArrows = 7;
+            const waterInBlock = Math.min(waterHeight - blockBottom, blockHeight);
+            if (waterInBlock > 0) {
+                for(let i=0; i<=numSideArrows; i++) {
+                    const currentDepth = (waterInBlock / numSideArrows) * i; 
+                    const yPos = waterHeight - currentDepth;
+                    if (yPos < blockBottom) continue;
+
+                    const arrowLen = (currentDepth / 100) * 15 + 5; // 随深度增加
+
+                    // 左
+                    const arrowL = document.createElement('div');
+                    arrowL.className = 'pressure-arrow';
+                    arrowL.style.left = `calc(50% - ${blockWidth/2}px - ${arrowLen}px)`;
+                    arrowL.style.bottom = `${yPos}px`;
+                    arrowL.style.height = `${arrowLen}px`;
+                    arrowL.style.transform = 'rotate(90deg)';
+                    vectorOverlay.appendChild(arrowL);
+
+                    // 右
+                    const arrowR = document.createElement('div');
+                    arrowR.className = 'pressure-arrow';
+                    arrowR.style.left = `calc(50% + ${blockWidth/2}px)`;
+                    arrowR.style.bottom = `${yPos}px`;
+                    arrowR.style.height = `${arrowLen}px`;
+                    arrowR.style.transform = 'rotate(-90deg)';
+                    vectorOverlay.appendChild(arrowR);
+                }
+            }
+        }
+
+        function update() {
+            const rho = parseFloat(densityInput.value);
+            const gap = parseFloat(gapInput.value);
+            const V_block = 4.0;
+            const V_water = 1.0;
+            const blockWidth = 160;
+            const blockHeight = 320;
+
+            document.getElementById('density-val').innerText = `${rho.toFixed(2)} kg/L`;
+            document.getElementById('gap-val').innerText = gap < 10 ? "极窄 (Paradox)" : (gap > 45 ? "宽敞" : "中等");
+
+            let V_displaced = V_block * rho;
+            if (V_displaced > V_block) V_displaced = V_block;
+            document.getElementById('v-displaced').innerText = `${V_displaced.toFixed(2)} L`;
+
+            const containerWidth = blockWidth + (gap * 2);
+            containerUI.style.width = containerWidth + 'px';
+            blockUI.style.width = blockWidth + 'px';
+            blockUI.style.height = blockHeight + 'px';
+
+            let waterHeight, blockBottom;
+            if (rho > 1.0) {
+                blockBottom = 0;
+                waterHeight = (V_water / (containerWidth - blockWidth)) * 400 + 20;
+            } else {
+                const gapArea = (containerWidth - blockWidth);
+                waterHeight = (V_displaced * 65) + (V_water / gapArea) * 200;
+                blockBottom = Math.max(5, waterHeight - (V_displaced * 65));
+            }
+            if (waterHeight > 440) waterHeight = 440;
+
+            waterUI.style.height = `${waterHeight}px`;
+            blockUI.style.bottom = `${blockBottom}px`;
+
+            // 物理数值与公式更新
+            const pBot = Math.round(rho * 1000 * 9.8 * (waterHeight/100));
+            const pTop = waterHeight > (blockBottom + blockHeight) ? 
+                         Math.round(1000 * 9.8 * (waterHeight - blockBottom - blockHeight)/100) : 0;
+            
+            // 使用 KaTeX 动态渲染
+            const pBotEl = document.getElementById('p-bot-formula');
+            const pTopEl = document.getElementById('p-top-formula');
+            const logicEl = document.getElementById('buoyancy-logic');
+
+            if (window.katex) {
+                katex.render(`${pBot} \\text{ Pa}`, pBotEl);
+                katex.render(`${pTop} \\text{ Pa}`, pTopEl);
+                katex.render(`F_{浮} = (P_{bot} - P_{top}) \\times S_{底}`, logicEl);
+            }
+
+            updateArrows(waterHeight, blockBottom, blockHeight, blockWidth, pBot / 100);
+        }
+
+        densityInput.addEventListener('input', update);
+        gapInput.addEventListener('input', update);
+        
+        // 初始逻辑：确保 DOM 和 KaTeX 均就绪
+        window.onload = function() {
+            // 渲染静态 LaTeX 公式
+            if (window.renderMathInElement) {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            }
+            // 执行物理仿真初始化
+            update();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>“惯性力”的两重含义辨析</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX for Math -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .card-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
+        .math-inline { font-size: 1.1em; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex items-center justify-center">
+
+    <div class="max-w-5xl w-full">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-4">
+                ⚠️ “惯性力” 的两重含义陷阱
+            </h1>
+            <p class="text-slate-400 text-lg">在经典力学与流体力学中，同一个词代表了完全不同的物理本质</p>
+        </div>
+
+        <!-- Comparison Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            
+            <!-- Left Card: Classical Mechanics -->
+            <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 card-hover relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-red-500/20 text-red-300 px-3 py-1 rounded-bl-lg text-sm font-bold border-b border-l border-red-500/30">
+                    经典力学 / 参考系
+                </div>
+                
+                <h2 class="text-2xl font-bold text-red-400 mb-2 mt-4">1. 假想力 / 虚拟力</h2>
+                <p class="text-slate-300 text-sm mb-6 uppercase tracking-wider">(Fictitious Force / Pseudo Force)</p>
+                
+                <!-- SVG Illustration -->
+                <div class="w-full bg-slate-900 rounded-xl p-4 mb-6 border border-slate-700 flex justify-center items-center h-48">
+                    <svg viewBox="0 0 300 150" class="w-full h-full">
+                        <!-- Road -->
+                        <line x1="20" y1="120" x2="280" y2="120" stroke="#475569" stroke-width="4" />
+                        <!-- Car -->
+                        <rect x="50" y="50" width="120" height="50" rx="10" fill="#ef4444" fill-opacity="0.8" />
+                        <rect x="120" y="25" width="40" height="25" rx="5" fill="#ef4444" fill-opacity="0.8" />
+                        <!-- Wheels -->
+                        <circle cx="80" cy="110" r="12" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
+                        <circle cx="140" cy="110" r="12" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
+                        <!-- Passenger leaning forward -->
+                        <line x1="100" y1="90" x2="120" y2="40" stroke="#f8fafc" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="125" cy="30" r="10" fill="#f8fafc" />
+                        
+                        <!-- Arrows -->
+                        <!-- Car Deceleration (Real) -->
+                        <path d="M 230 80 L 190 80 L 205 65 M 190 80 L 205 95" stroke="#3b82f6" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="180" y="55" fill="#3b82f6" font-size="14" font-weight="bold">参考系减速 (真实)</text>
+                        <!-- Inertial Force (Fictitious) -->
+                        <path d="M 125 30 L 165 30 L 150 15 M 165 30 L 150 45" stroke="#facc15" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="175" y="35" fill="#facc15" font-size="14" font-weight="bold">惯性力 (假想)</text>
+                    </svg>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="bg-slate-900/50 p-4 rounded-lg">
+                        <span class="text-slate-400 text-sm block mb-1">本质：</span>
+                        <p class="text-slate-200">它<b class="text-red-400">不是真正的力</b>。是因为观察者身处在加速或旋转的“非惯性系”中，为了让牛顿第二定律依然成立，而强行引入的修正项。</p>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-lg">
+                        <span class="text-slate-400 text-sm block mb-1">典型例子：</span>
+                        <ul class="list-disc pl-5 text-slate-200">
+                            <li>公交车急刹车时，把你往前推的力。</li>
+                            <li><b class="text-yellow-400">科氏力 (Coriolis Force)</b>：因地球自转产生的偏向力。</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-lg text-center">
+                        <span class="text-slate-400 text-sm block mb-1">数学表达：</span>
+                        <div class="text-xl">$$\mathbf{F}_{fict} = -m\mathbf{a}_{frame}$$</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Card: Fluid Dynamics -->
+            <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 card-hover relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-bl-lg text-sm font-bold border-b border-l border-emerald-500/30">
+                    流体力学 / 动量方程
+                </div>
+                
+                <h2 class="text-2xl font-bold text-emerald-400 mb-2 mt-4">2. 流体动量惯性</h2>
+                <p class="text-slate-300 text-sm mb-6 uppercase tracking-wider">(Advective Inertia / Inertial Term)</p>
+
+                <!-- SVG Illustration -->
+                <div class="w-full bg-slate-900 rounded-xl p-4 mb-6 border border-slate-700 flex justify-center items-center h-48">
+                    <svg viewBox="0 0 300 150" class="w-full h-full">
+                        <!-- Curved flow channel / streamlines -->
+                        <path d="M 30 130 Q 150 130 250 30" stroke="#334155" stroke-width="40" fill="none" stroke-linecap="round"/>
+                        <path d="M 30 130 Q 150 130 250 30" stroke="#0ea5e9" stroke-width="2" fill="none" stroke-dasharray="8,4"/>
+                        
+                        <!-- Fluid Parcel -->
+                        <circle cx="150" cy="95" r="15" fill="#0ea5e9" />
+                        
+                        <!-- Actual Velocity Vector -->
+                        <path d="M 150 95 L 210 50 L 195 45 M 210 50 L 205 60" stroke="#10b981" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="215" y="45" fill="#10b981" font-size="14" font-weight="bold">流速 V</text>
+                        
+                        <!-- Inertial tendency (straight line) -->
+                        <path d="M 150 95 L 240 95 L 225 85 M 240 95 L 225 105" stroke="#ef4444" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="170" y="115" fill="#ef4444" font-size="14" font-weight="bold">流体的动量惯性 (横冲直撞)</text>
+                    </svg>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="bg-slate-900/50 p-4 rounded-lg">
+                        <span class="text-slate-400 text-sm block mb-1">本质：</span>
+                        <p class="text-slate-200">它是动量方程中的<b class="text-emerald-400">对流项 (Advective term)</b>。表示流体质点因为自身拥有质量和速度，想要“保持原有直线运动状态”的物理属性。</p>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-lg">
+                        <span class="text-slate-400 text-sm block mb-1">典型例子：</span>
+                        <ul class="list-disc pl-5 text-slate-200">
+                            <li>水流冲过弯道时，水会冲击外侧河岸。</li>
+                            <li><b class="text-cyan-400">雷诺数 (Re) 和 罗斯贝数 (Ro)</b> 的分子：代表流体自身的“野性”和动能。</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-900/50 p-4 rounded-lg text-center">
+                        <span class="text-slate-400 text-sm block mb-1">数学表达与尺度分析：</span>
+                        <div class="text-xl">$$\rho (\mathbf{V} \cdot \nabla)\mathbf{V} \sim \rho \frac{U^2}{L}$$</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Rossby Number Conclusion Box -->
+        <div class="bg-gradient-to-r from-indigo-900 to-purple-900 rounded-2xl p-8 border border-indigo-500/50 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 text-indigo-500/20">
+                <svg width="150" height="150" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 3.8l7.2 14.2H4.8L12 5.8z"/></svg>
+            </div>
+            
+            <h3 class="text-2xl font-bold text-white mb-4 flex items-center">
+                <span class="bg-indigo-500 text-white w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-lg">💡</span>
+                终极缝合：罗斯贝数 (Rossby Number)
+            </h3>
+            <p class="text-indigo-200 text-lg mb-6">
+                现在回头看罗斯贝数 $Ro$，你会发现它极其巧妙地将这**两种截然不同的“惯性力”**放在了一起进行博弈：
+            </p>
+            
+            <div class="bg-black/40 rounded-xl p-6 border border-indigo-500/30 flex flex-col items-center justify-center backdrop-blur-sm">
+                <div class="text-2xl md:text-3xl text-white mb-4">
+                    $$Ro = \frac{\text{流体自身的动量惯性力 } (U^2/L)}{\text{地球自转产生的假想惯性力 } (fU)}$$
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 w-full gap-4 mt-4 text-sm md:text-base">
+                    <div class="bg-red-500/20 border border-red-500/30 p-4 rounded text-red-200 text-center">
+                        <b class="text-white block mb-1">分子 (流体惯性) 占优 ($Ro \gg 1$)</b>
+                        流体速度极快，自身惯性压倒一切。<br>地球自转来不及影响它。<br><span class="text-xs opacity-70">(如：龙卷风、水槽漩涡)</span>
+                    </div>
+                    <div class="bg-blue-500/20 border border-blue-500/30 p-4 rounded text-blue-200 text-center">
+                        <b class="text-white block mb-1">分母 (假想力) 占优 ($Ro \ll 1$)</b>
+                        流体速度慢且尺度大。<br>完全受制于地球自转带来的科氏力。<br><span class="text-xs opacity-70">(如：大洋环流、台风)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Initialize KaTeX safely -->
+    <script>
+        function initMath() {
+            if (typeof renderMathInElement === 'undefined') {
+                setTimeout(initMath, 50);
+                return;
+            }
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError : false
+            });
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMath);
+        } else {
+            initMath();
+        }
+    </script>
+</body>
+</html>
