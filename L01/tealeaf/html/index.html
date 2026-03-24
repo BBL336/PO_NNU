@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>茶杯搅拌的物理学</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', SimHei, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 40px;
+        }
+
+        .visualization {
+            text-align: center;
+        }
+
+        .visualization h2 {
+            color: #2E7D32;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            background: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: opacity 0.2s ease;
+        }
+
+        .image-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .animation-controls {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 6px;
+        }
+
+        .animation-controls button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+
+        .animation-controls button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .animation-controls .status {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        .physics-section {
+            grid-column: 1 / -1;
+            background: #f5f5f5;
+            padding: 30px;
+            border-radius: 8px;
+            border-left: 5px solid #4CAF50;
+        }
+
+        .physics-section h2 {
+            color: #2E7D32;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .physics-section h3 {
+            color: #558B2F;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .physics-section p {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .equation {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #FFC107;
+        }
+
+        .highlight strong {
+            color: #D84315;
+        }
+
+        .controls {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 2px solid #4CAF50;
+        }
+
+        .controls h3 {
+            color: #2E7D32;
+            margin-bottom: 15px;
+        }
+
+        .controls ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .controls li {
+            margin: 8px 0;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .controls li:before {
+            content: "✓ ";
+            color: #4CAF50;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 10px 5px 10px 0;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .button-group {
+            margin-top: 15px;
+        }
+
+        footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+
+        @media (max-width: 1000px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>茶杯搅拌的物理学</h1>
+            <p>水面抛物面与茶叶聚集现象演示</p>
+        </header>
+
+        <div class="controls">
+            <h3>关于本演示</h3>
+            <p>这个演示展示了搅拌茶杯时发生的两个有趣物理现象：</p>
+            <ul>
+                <li><strong>水面形成抛物面</strong> - 由于离心力和重力的共同作用</li>
+                <li><strong>茶叶汇聚中心</strong> - 由于次级流动（Secondary Flow）效应</li>
+            </ul>
+            <div class="button-group">
+                <button onclick="scrollToSection('physics')">查看物理原理</button>
+                <button onclick="scrollToSection('visualization')">查看可视化</button>
+            </div>
+            <div class="animation-controls" style="margin-top: 15px;">
+                <div style="font-weight: bold; margin-bottom: 8px;">动画速度（模拟转速）</div>
+                <input id="speedRange" type="range" min="120" max="900" step="40" value="200" style="width: 100%;">
+                <div class="status" id="speedLabel">速度：200 ms/帧（转速越快，动画越快）</div>
+            </div>
+        </div>
+
+        <div class="content" id="visualization">
+            <div class="visualization">
+                <h2>3D 抛物面视图</h2>
+                <p style="color: #666; margin-bottom: 15px;">搅拌时水面的立体形状 - 角速度逐渐增加</p>
+                <div class="image-container" id="stirring3dContainer">
+                    <img id="stirring3dImage" src="stirring_3d_0.png" alt="抛物面">
+                </div>
+                <div class="animation-controls">
+                    <button id="playstirring_3d" onclick="playAnimation('stirring_3d')">播放</button>
+                    <button id="stopstirring_3d" onclick="stopAnimation('stirring_3d')">停止</button>
+                    <div class="status" id="stirring3dStatus">帧 1/6</div>
+                    <div class="status" id="stirring3dOmega">ω = 2.0 rad/s</div>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <h2>俯视图 - 搅拌过程</h2>
+                <p style="color: #666; margin-bottom: 15px;">茶叶分布和水流方向</p>
+                <div class="image-container" id="stirringtopContainer">
+                    <canvas id="stirringCanvas"></canvas>
+                </div>
+                <div class="animation-controls">
+                    <button id="playstirring_top" onclick="playAnimation('stirring_top')">播放</button>
+                    <button id="stopstirring_top" onclick="stopAnimation('stirring_top')">停止</button>
+                    <div class="status" id="stirringtopStatus">帧 1/6</div>
+                    <div class="status" id="stirringtopOmega">ω = 2.0 rad/s</div>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <h2>3D 静止后水面</h2>
+                <p style="color: #666; margin-bottom: 15px;">停止搅拌后水面逐渐平复</p>
+                <div class="image-container" id="settling3dContainer">
+                    <img id="settling3dImage" src="settling_3d_0.png" alt="抛物面平复">
+                </div>
+                <div class="animation-controls">
+                    <button id="playsettling_3d" onclick="playAnimation('settling_3d')">播放</button>
+                    <button id="stopsettling_3d" onclick="stopAnimation('settling_3d')">停止</button>
+                    <div class="status" id="settling3dStatus">帧 1/8</div>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <h2>俯视图 - 茶叶聚集</h2>
+                <p style="color: #666; margin-bottom: 15px;">茶叶逐渐向中心聚集</p>
+                <div class="image-container" id="settlingtopContainer">
+                    <canvas id="settlingCanvas"></canvas>
+                </div>
+                <div class="animation-controls">
+                    <button id="playsettling_top" onclick="playAnimation('settling_top')">播放</button>
+                    <button id="stopsettling_top" onclick="stopAnimation('settling_top')">停止</button>
+                    <div class="status" id="settlingtopStatus">帧 1/8</div>
+                </div>
+            </div>
+
+            <div class="physics-section">
+                <h2 id="physics">物理原理分析</h2>
+
+                <h3>1. 搅拌时：水面形成抛物面</h3>
+                <p>当用筷子搅动茶水时，水体做圆周运动。液体需要<strong>向心力</strong>来维持圆周运动。</p>
+
+                <div class="equation">
+                    <strong>向心力公式：</strong>
+                    $$F_{\text{向心}} = m\omega^2 r$$
+                </div>
+
+                <p>液面形状满足方程：</p>
+                <div class="equation">
+                    <strong>抛物面方程：</strong>
+                    $$z = \frac{\omega^2 r^2}{2g}$$
+                </div>
+
+                <p>离旋转轴越远，水位越高。角速度越快，抛物面越陡峭。</p>
+
+                <h3>2. 停止搅拌后：茶叶汇聚中心</h3>
+                <p>这是<strong>次级流动（Secondary Flow）</strong>现象，被称为"茶叶悖论"或"爱因斯坦效应"。</p>
+
+                <div class="highlight">
+                    <strong>关键观察：</strong>
+                    尽管上层水流向外，下层水流却向内。茶叶沉底，跟随底层水流，因此聚集到中心，而不是被"甩"到边缘！
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>茶杯搅拌物理演示 | HTML5 动画（离线可用）</p>
+        </footer>
+    </div>
+
+    <script>
+        const animations = {
+            stirring_3d: { type: 'image', frames: 6, current: 0, playing: false, imgId: 'stirring3dImage', statusId: 'stirring3dStatus', omegaId: 'stirring3dOmega', acc: 0 },
+            stirring_top: { type: 'canvas', frames: 6, current: 0, playing: false, canvasId: 'stirringCanvas', statusId: 'stirringtopStatus', omegaId: 'stirringtopOmega' },
+            settling_3d: { type: 'image', frames: 8, current: 0, playing: false, imgId: 'settling3dImage', statusId: 'settling3dStatus', acc: 0 },
+            settling_top: { type: 'canvas', frames: 8, current: 0, playing: false, canvasId: 'settlingCanvas', statusId: 'settlingtopStatus' }
+        };
+
+        let frameInterval = 200;
+        let currentOmega = 5.0;
+        const omegaByFrame = [2.0, 3.5, 5.0, 6.5, 8.0, 9.5];
+        let lastTime = 0;
+
+        function playAnimation(name) {
+            const anim = animations[name];
+            anim.playing = true;
+            document.getElementById('play' + name).style.display = 'none';
+            document.getElementById('stop' + name).style.display = 'inline-block';
+        }
+
+        function stopAnimation(name) {
+            const anim = animations[name];
+            anim.playing = false;
+            document.getElementById('play' + name).style.display = 'inline-block';
+            document.getElementById('stop' + name).style.display = 'none';
+        }
+
+        function updateImageFrame(name) {
+            const anim = animations[name];
+            const img = document.getElementById(anim.imgId);
+            const status = document.getElementById(anim.statusId);
+            img.src = name + '_' + anim.current + '.png';
+            status.textContent = '帧 ' + (anim.current + 1) + '/' + anim.frames;
+            if (anim.omegaId) {
+                const omega = omegaByFrame[anim.current] || omegaByFrame[0];
+                document.getElementById(anim.omegaId).textContent = 'ω = ' + omega.toFixed(1) + ' rad/s';
+            }
+        }
+
+        function mapSpeedToOmega(value) {
+            const min = 2.0;
+            const max = 10.0;
+            const t = (900 - value) / 780;
+            return min + (max - min) * Math.min(1, Math.max(0, t));
+        }
+
+        function updateSpeedLabel(value) {
+            const label = document.getElementById('speedLabel');
+            currentOmega = mapSpeedToOmega(value);
+            label.textContent = '速度：' + value + ' ms/帧（转速越快，动画越快）';
+        }
+
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function initCanvasState(anim) {
+            const canvas = document.getElementById(anim.canvasId);
+            const ctx = canvas.getContext('2d');
+            anim.ctx = ctx;
+            anim.state = { leaves: [], angle: 0 };
+            const n = 28;
+            for (let i = 0; i < n; i++) {
+                const r = 0.06 + Math.random() * 0.42;
+                const theta = Math.random() * Math.PI * 2;
+                anim.state.leaves.push({ r, theta, wobble: Math.random() * Math.PI * 2 });
+            }
+        }
+
+        function resizeCanvas(anim) {
+            const canvas = document.getElementById(anim.canvasId);
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        function drawCup(ctx, cx, cy, r) {
+            ctx.strokeStyle = '#111';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function drawArrows(ctx, cx, cy, r, angle) {
+            ctx.strokeStyle = 'rgba(90, 120, 255, 0.45)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 10; i++) {
+                const a = angle + (i * Math.PI * 2) / 10;
+                const x = cx + Math.cos(a) * r * 0.65;
+                const y = cy + Math.sin(a) * r * 0.65;
+            const dx = -Math.sin(a) * r * 0.10;
+            const dy = Math.cos(a) * r * 0.10;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + dx, y + dy);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x + dx, y + dy);
+                ctx.lineTo(x + dx * 0.75 - dy * 0.45, y + dy * 0.75 + dx * 0.45);
+                ctx.lineTo(x + dx * 0.75 + dy * 0.45, y + dy * 0.75 - dx * 0.45);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(90, 120, 255, 0.45)';
+                ctx.fill();
+            }
+        }
+
+        function drawLeaves(ctx, cx, cy, r, leaves) {
+            ctx.fillStyle = '#8B4513';
+            ctx.strokeStyle = '#654321';
+            leaves.forEach(leaf => {
+                const x = cx + Math.cos(leaf.theta) * leaf.r * r;
+                const y = cy + Math.sin(leaf.theta) * leaf.r * r;
+                ctx.beginPath();
+                ctx.arc(x, y, r * 0.03, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            });
+        }
+
+        function updateStirring(anim, dt) {
+            const speed = currentOmega / 5.0;
+            anim.state.angle += dt * 2.2 * speed;
+            anim.state.leaves.forEach(leaf => {
+                leaf.theta += dt * 2.2 * speed;
+                leaf.wobble += dt * 1.4;
+                const drift = 0.018 * Math.sin(leaf.wobble) * speed;
+                leaf.r = Math.min(0.48, Math.max(0.06, leaf.r + dt * drift));
+            });
+        }
+
+        function updateSettling(anim, dt) {
+            const speed = currentOmega / 8.0;
+            anim.state.angle += dt * 0.6 * speed;
+            anim.state.leaves.forEach(leaf => {
+                leaf.theta += dt * 0.5 * speed;
+                leaf.r = Math.max(0.05, leaf.r * (1 - dt * 0.35 * speed));
+            });
+        }
+
+        function drawCanvas(anim, dt) {
+            if (!anim.ctx) {
+                initCanvasState(anim);
+                resizeCanvas(anim);
+            }
+            const ctx = anim.ctx;
+            const canvas = document.getElementById(anim.canvasId);
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+            const r = Math.min(w, h) * 0.45;
+
+            ctx.clearRect(0, 0, w, h);
+            drawCup(ctx, cx, cy, r);
+            if (anim === animations.stirring_top) {
+                updateStirring(anim, dt);
+                drawArrows(ctx, cx, cy, r, anim.state.angle);
+            } else {
+                updateSettling(anim, dt);
+                drawArrows(ctx, cx, cy, r, anim.state.angle * 0.3);
+            }
+            drawLeaves(ctx, cx, cy, r, anim.state.leaves);
+            const status = document.getElementById(anim.statusId);
+            status.textContent = '运行中';
+            if (anim.omegaId) {
+                document.getElementById(anim.omegaId).textContent = 'ω = ' + currentOmega.toFixed(1) + ' rad/s';
+            }
+        }
+
+        function tick(time) {
+            if (!lastTime) lastTime = time;
+            const dt = Math.min(0.05, (time - lastTime) / 1000);
+            lastTime = time;
+
+            Object.keys(animations).forEach(name => {
+                const anim = animations[name];
+                if (!anim.playing) return;
+                if (anim.type === 'image') {
+                    anim.acc += dt * 1000;
+                    if (anim.acc >= frameInterval) {
+                        anim.acc = 0;
+                        anim.current = (anim.current + 1) % anim.frames;
+                        updateImageFrame(name);
+                    }
+                } else {
+                    drawCanvas(anim, dt);
+                }
+            });
+
+            requestAnimationFrame(tick);
+        }
+
+        window.addEventListener('load', () => {
+            Object.keys(animations).forEach(name => {
+                document.getElementById('stop' + name).style.display = 'none';
+            });
+
+            const speedRange = document.getElementById('speedRange');
+            updateSpeedLabel(speedRange.value);
+            speedRange.addEventListener('input', (e) => {
+                frameInterval = parseInt(e.target.value, 10);
+                updateSpeedLabel(frameInterval);
+            });
+
+            // 自动播放所有动画
+            playAnimation('stirring_3d');
+            playAnimation('stirring_top');
+            playAnimation('settling_3d');
+            playAnimation('settling_top');
+            updateImageFrame('stirring_3d');
+            updateImageFrame('settling_3d');
+
+            requestAnimationFrame(tick);
+        });
+
+        window.addEventListener('resize', () => {
+            ['stirring_top', 'settling_top'].forEach(name => {
+                const anim = animations[name];
+                if (anim && anim.canvasId) {
+                    resizeCanvas(anim);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

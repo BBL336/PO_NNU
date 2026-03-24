@@ -1,0 +1,339 @@
+:root {
+    --bg-color: #050a14;
+    --panel-bg: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-primary: #e0e6ed;
+    --text-secondary: #94a3b8;
+    --nsr-color: #00d2ff;
+    --nwp-color: #f39c12;
+    --tsr-color: #9b59b6;
+    --suez-color: #e74c3c;
+    --accent: #4fc3f7;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    padding: 2rem;
+    text-align: center;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent);
+    z-index: 10;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+header h1 span {
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--accent);
+    display: block;
+    margin-top: -5px;
+}
+
+header p {
+    color: var(--text-secondary);
+    margin-top: 5px;
+}
+
+main {
+    flex: 1;
+    position: relative;
+}
+
+#map-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+.glass-panel {
+    position: absolute;
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+}
+
+#controls {
+    top: 2rem;
+    left: 2rem;
+    width: 280px;
+}
+
+#info-panel {
+    bottom: 2rem;
+    right: 2rem;
+    width: 380px;
+    max-height: 80vh;
+    overflow-y: auto;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1.2rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+#route-details {
+    margin: 1rem 0;
+    padding-left: 1.2rem;
+    list-style-type: none;
+}
+
+#route-details li {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.6rem;
+    position: relative;
+}
+
+#route-details li::before {
+    content: "•";
+    color: var(--accent);
+    position: absolute;
+    left: -1rem;
+    font-weight: bold;
+}
+
+.detailed-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    user-select: none;
+    transition: transform 0.2s;
+}
+
+.checkbox-container:hover {
+    transform: translateX(5px);
+}
+
+.checkbox-container input {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    margin-right: 12px;
+    position: relative;
+}
+
+.checkbox-container input:checked+.checkmark::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.checkmark.nsr {
+    border-color: var(--nsr-color);
+}
+
+.nsr:after {
+    background-color: var(--nsr-color);
+}
+
+.checkmark.nwp {
+    border-color: var(--nwp-color);
+}
+
+.nwp:after {
+    background-color: var(--nwp-color);
+}
+
+.checkmark.tsr {
+    border-color: var(--tsr-color);
+}
+
+.tsr:after {
+    background-color: var(--tsr-color);
+}
+
+.checkmark.suez {
+    border-color: var(--suez-color);
+}
+
+.suez:after {
+    background-color: var(--suez-color);
+}
+
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-item .label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.stat-item .value {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.1rem;
+}
+
+.hint {
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: var(--accent);
+    opacity: 0.8;
+    text-align: center;
+    border-top: 1px dashed var(--border-color);
+    padding-top: 0.8rem;
+}
+
+#route-info h4 {
+    color: #fff;
+    margin-bottom: 0.8rem;
+}
+
+#route-description {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+footer {
+    padding: 1.5rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+    z-index: 10;
+}
+
+.legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.rotterdam {
+    background-color: #fff;
+    box-shadow: 0 0 10px #fff;
+}
+
+.yokohama {
+    background-color: #fff;
+    box-shadow: 0 0 10px #fff;
+}
+
+.pole {
+    background-color: #4fc3f7;
+    box-shadow: 0 0 10px #4fc3f7;
+}
+
+/* D3 Styles */
+.land {
+    fill: #1a2332;
+    stroke: #2c3e50;
+    stroke-width: 0.5px;
+}
+
+.water {
+    fill: #08101a;
+}
+
+.graticule {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.05);
+    stroke-width: 0.5px;
+}
+
+.route-path {
+    fill: none;
+    stroke-width: 3px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 5px currentColor);
+    transition: opacity 0.5s;
+}
+
+.route-path-background {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.3);
+    stroke-width: 5px;
+}
+
+.ship {
+    filter: drop-shadow(0 0 8px currentColor);
+}
+
+.city-label {
+    fill: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+}

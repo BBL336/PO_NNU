@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北极航道动态演示 | Arctic Silk Road</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1>北极航道 <span>ARCTIC SILK ROAD</span></h1>
+            <p>连接亚洲与欧洲的蓝海新径</p>
+        </header>
+
+        <main>
+            <div id="map-container">
+                <div id="map"></div>
+                <!-- UI Panels -->
+                <div class="glass-panel" id="controls">
+                    <h3>航道选择</h3>
+                    <div class="control-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" checked id="nsr-toggle" data-route="nsr">
+                            <span class="checkmark nsr"></span>
+                            东北航道 (NSR)
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="nwp-toggle" data-route="nwp">
+                            <span class="checkmark nwp"></span>
+                            西北航道 (NWP)
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="tsr-toggle" data-route="tsr">
+                            <span class="checkmark tsr"></span>
+                            穿极航道 (TSR)
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="suez-toggle" data-route="suez">
+                            <span class="checkmark suez"></span>
+                            传统航道 (Suez)
+                        </label>
+                    </div>
+                    <p class="hint">💡 拖拽地球可旋转视角</p>
+                </div>
+
+                <div class="glass-panel" id="info-panel">
+                    <h3>航道详情</h3>
+                    <div id="route-info">
+                        <h4 id="route-title">东北航道 (Northern Sea Route)</h4>
+                        <p id="route-description">
+                            通过俄罗斯北冰洋沿岸，连接大西洋与太平洋的航道。它是目前开发程度最高、商业利用价值最大的北极航道。
+                        </p>
+                        <ul id="route-details"></ul>
+                        <div class="detailed-stats">
+                            <div class="stat-item" id="distance-stat">
+                                <span class="label">预计航程:</span>
+                                <span class="value">~13,000 km</span>
+                            </div>
+                            <div class="stat-item" id="time-stat">
+                                <span class="label">航行时间:</span>
+                                <span class="value">20 天</span>
+                            </div>
+                            <div class="stat-item" id="saving-stat">
+                                <span class="label">航程缩减:</span>
+                                <span class="value">~40%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="legend">
+                <div class="legend-item"><span class="dot rotterdam"></span> 鹿特丹</div>
+                <div class="legend-item"><span class="dot yokohama"></span> 横滨</div>
+                <div class="legend-item"><span class="dot pole"></span> 北极点</div>
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
