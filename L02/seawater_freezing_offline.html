@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>海水结冰物理过程演示</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #cbd5e1;
+      --blue: #2563eb;
+      --cyan: #06b6d4;
+      --amber: #f59e0b;
+      --shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+
+    .title { text-align: center; }
+    .title h1 { margin: 0 0 6px; font-size: clamp(24px, 4vw, 38px); }
+    .title p { margin: 0; color: var(--muted); font-weight: 600; }
+
+    .controls {
+      background: var(--panel);
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform .08s ease, filter .2s ease;
+    }
+    button:active { transform: scale(.97); }
+
+    .btn-play { background: var(--blue); padding: 10px 18px; }
+    .btn-pause { background: var(--amber); padding: 10px 18px; }
+    .btn-reset {
+      background: #e2e8f0;
+      color: #1e293b;
+      width: 42px;
+      height: 42px;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .slider-wrap { display: grid; gap: 8px; }
+    .slider-text {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .slider-text .temp-now { font-size: 20px; color: var(--blue); font-weight: 900; }
+
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      accent-color: var(--blue);
+      cursor: pointer;
+    }
+
+    .phase {
+      background: #eff6ff;
+      border: 2px solid #bfdbfe;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      line-height: 1.6;
+    }
+    .phase h2 { margin: 0 0 6px; font-size: 20px; }
+    .phase p { margin: 0; color: #334155; }
+
+    .tank-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .tank-card {
+      background: var(--panel);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      border-top: 8px solid var(--cyan);
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+    }
+
+    .tank-card.high { border-top-color: var(--blue); }
+    .tank-title { font-size: 22px; font-weight: 800; text-align: center; }
+
+    .tank-svg {
+      width: min(100%, 320px);
+      height: auto;
+      overflow: visible;
+    }
+
+    .status {
+      width: 100%;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 10px;
+      font-size: 14px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+
+    .line { display: flex; justify-content: space-between; align-items: center; }
+    .label { color: #64748b; }
+    .value { font-weight: 800; color: #1d4ed8; }
+
+    .badge {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: #0f172a;
+      background: #e2e8f0;
+    }
+
+    .badge.flow { background: #dbeafe; color: #1e40af; }
+    .badge.ice { background: #cffafe; color: #0e7490; }
+
+    @keyframes dash-flow {
+      from { stroke-dashoffset: 40; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    .convect {
+      stroke-dasharray: 15 15;
+      animation: dash-flow 1.5s linear infinite;
+    }
+
+    @media (max-width: 860px) {
+      .tank-grid { grid-template-columns: 1fr; }
+      .slider-text { font-size: 13px; }
+      .slider-text .temp-now { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="title">
+      <h1>🌊 海水结冰物理过程演示</h1>
+      <p>不同盐度下的海水密度与结冰特征对比</p>
+    </section>
+
+    <section class="controls">
+      <div class="btn-row">
+        <button id="playBtn" class="btn-play">
+          <span id="playIcon">▶</span>
+          <span id="playText">播放降温</span>
+        </button>
+        <button id="resetBtn" class="btn-reset" title="重置">↺</button>
+      </div>
+
+      <div class="slider-wrap">
+        <div class="slider-text">
+          <span>环境气温: 10°C (初始)</span>
+          <span class="temp-now" id="envTemp">10.0°C</span>
+          <span style="text-align:right;">-4°C (严寒)</span>
+        </div>
+        <input id="timeRange" type="range" min="0" max="100" step="0.1" value="0" />
+      </div>
+    </section>
+
+    <section id="phaseBox" class="phase">
+      <h2 id="phaseTitle">第一阶段：气温下降，共同对流</h2>
+      <p id="phaseDesc">冷空气使海表降温。此时两种盐度的表面海水都在变冷、密度变大并下沉，产生垂直对流，上下层海水一起均匀变冷。</p>
+    </section>
+
+    <section class="tank-grid">
+      <article class="tank-card">
+        <div class="tank-title">盐度小于24.695</div>
+        <svg class="tank-svg" viewBox="0 0 220 300" aria-label="低盐度水箱">
+          <rect x="20" y="20" width="180" height="250" rx="16" fill="#e0f2fe" stroke="#1e3a8a" stroke-width="6" />
+          <rect id="lowWater" x="23" y="23" width="174" height="244" rx="13" fill="#60a5fa" />
+
+          <g id="lowFlow" opacity="1">
+            <path class="convect" d="M 70 60 A 30 30 0 0 0 70 220 L 150 220 A 30 30 0 0 0 150 60 Z" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="5" />
+            <polygon points="65,145 75,145 70,160" fill="#fff" />
+            <polygon points="145,145 155,145 150,130" fill="#fff" />
+            <text x="110" y="150" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">垂直对流</text>
+          </g>
+
+          <text id="lowStop" x="110" y="150" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="16" font-weight="700" visibility="hidden">对流停止</text>
+
+          <path id="lowIce" d="M 23 23 L 197 23 L 197 23 L 170 23 L 140 23 L 110 23 L 80 23 L 50 23 L 23 23 Z" fill="#cffafe" stroke="#06b6d4" stroke-width="3" visibility="hidden" />
+          <text id="lowIceLabel" x="110" y="40" text-anchor="middle" fill="#0891b2" font-size="14" font-weight="700" visibility="hidden">海冰</text>
+
+          <text x="30" y="30" font-size="12" fill="#334155">表层</text>
+          <text x="166" y="260" font-size="12" fill="#334155">底层</text>
+        </svg>
+
+        <div class="status">
+          <div class="line"><span class="label">表层水温:</span><span id="lowSurface" class="value">10.0°C</span></div>
+          <div class="line"><span class="label">底层水温:</span><span id="lowBottom" class="value">10.0°C</span></div>
+          <div class="line"><span class="label">状态:</span><span id="lowState" class="badge flow">对流冷却中</span></div>
+        </div>
+      </article>
+
+      <article class="tank-card high">
+        <div class="tank-title">盐度大于24.695</div>
+        <svg class="tank-svg" viewBox="0 0 220 300" aria-label="高盐度水箱">
+          <rect x="20" y="20" width="180" height="250" rx="16" fill="#e0f2fe" stroke="#1e3a8a" stroke-width="6" />
+          <rect id="highWater" x="23" y="23" width="174" height="244" rx="13" fill="#60a5fa" />
+
+          <g id="highFlow" opacity="1">
+            <path class="convect" d="M 70 60 A 30 30 0 0 0 70 220 L 150 220 A 30 30 0 0 0 150 60 Z" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="5" />
+            <polygon points="65,145 75,145 70,160" fill="#fff" />
+            <polygon points="145,145 155,145 150,130" fill="#fff" />
+            <text x="110" y="150" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">垂直对流</text>
+          </g>
+
+          <text id="highStop" x="110" y="150" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="16" font-weight="700" visibility="hidden">对流停止</text>
+
+          <path id="highIce" d="M 23 23 L 197 23 L 197 23 L 170 23 L 140 23 L 110 23 L 80 23 L 50 23 L 23 23 Z" fill="#cffafe" stroke="#06b6d4" stroke-width="3" visibility="hidden" />
+          <text id="highIceLabel" x="110" y="40" text-anchor="middle" fill="#0891b2" font-size="14" font-weight="700" visibility="hidden">海冰</text>
+
+          <text x="30" y="30" font-size="12" fill="#334155">表层</text>
+          <text x="166" y="260" font-size="12" fill="#334155">底层</text>
+        </svg>
+
+        <div class="status">
+          <div class="line"><span class="label">表层水温:</span><span id="highSurface" class="value">10.0°C</span></div>
+          <div class="line"><span class="label">底层水温:</span><span id="highBottom" class="value">10.0°C</span></div>
+          <div class="line"><span class="label">状态:</span><span id="highState" class="badge flow">对流冷却中</span></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const PHYSICS = {
+      low: { maxDensityTemp: 2.0, freezeTemp: -1.0 },
+      high: { maxDensityTemp: -3.0, freezeTemp: -1.9 }
+    };
+
+    const dom = {
+      playBtn: document.getElementById('playBtn'),
+      playIcon: document.getElementById('playIcon'),
+      playText: document.getElementById('playText'),
+      resetBtn: document.getElementById('resetBtn'),
+      timeRange: document.getElementById('timeRange'),
+      envTemp: document.getElementById('envTemp'),
+      phaseBox: document.getElementById('phaseBox'),
+      phaseTitle: document.getElementById('phaseTitle'),
+      phaseDesc: document.getElementById('phaseDesc'),
+
+      lowWater: document.getElementById('lowWater'),
+      lowFlow: document.getElementById('lowFlow'),
+      lowStop: document.getElementById('lowStop'),
+      lowIce: document.getElementById('lowIce'),
+      lowIceLabel: document.getElementById('lowIceLabel'),
+      lowSurface: document.getElementById('lowSurface'),
+      lowBottom: document.getElementById('lowBottom'),
+      lowState: document.getElementById('lowState'),
+
+      highWater: document.getElementById('highWater'),
+      highFlow: document.getElementById('highFlow'),
+      highStop: document.getElementById('highStop'),
+      highIce: document.getElementById('highIce'),
+      highIceLabel: document.getElementById('highIceLabel'),
+      highSurface: document.getElementById('highSurface'),
+      highBottom: document.getElementById('highBottom'),
+      highState: document.getElementById('highState')
+    };
+
+    let time = 0;
+    let isPlaying = false;
+    let rafId = null;
+
+    function toWaterColor(surfaceTemp) {
+      if (surfaceTemp > 5) return '#60a5fa';
+      if (surfaceTemp > 0) return '#3b82f6';
+      return '#2563eb';
+    }
+
+    function buildIcePath(thickness) {
+      const top = 23;
+      const y = top + thickness;
+      return `M 23 23 L 197 23 L 197 ${y} L 170 ${y - 4} L 140 ${y + 5} L 110 ${y - 3} L 80 ${y + 4} L 50 ${y - 5} L 23 ${y} Z`;
+    }
+
+    function computeState(envTemp) {
+      let lowSurfaceTemp = envTemp;
+      let lowBottomTemp = envTemp;
+      let lowConvecting = true;
+      let lowIceThickness = 0;
+
+      if (envTemp > PHYSICS.low.maxDensityTemp) {
+        lowSurfaceTemp = envTemp;
+        lowBottomTemp = envTemp;
+      } else if (envTemp > PHYSICS.low.freezeTemp) {
+        lowSurfaceTemp = envTemp;
+        lowBottomTemp = PHYSICS.low.maxDensityTemp;
+        lowConvecting = false;
+      } else {
+        lowSurfaceTemp = PHYSICS.low.freezeTemp;
+        lowBottomTemp = PHYSICS.low.maxDensityTemp;
+        lowConvecting = false;
+        lowIceThickness = (PHYSICS.low.freezeTemp - envTemp) * 10;
+      }
+
+      let highSurfaceTemp = envTemp;
+      let highBottomTemp = envTemp;
+      let highConvecting = true;
+      let highIceThickness = 0;
+
+      if (envTemp > PHYSICS.high.freezeTemp) {
+        highSurfaceTemp = envTemp;
+        highBottomTemp = envTemp;
+      } else {
+        highSurfaceTemp = PHYSICS.high.freezeTemp;
+        highBottomTemp = PHYSICS.high.freezeTemp;
+        highConvecting = false;
+        highIceThickness = (PHYSICS.high.freezeTemp - envTemp) * 20;
+      }
+
+      let phaseTitle = '';
+      let phaseDesc = '';
+      let phaseClass = 'phase';
+
+      if (envTemp > 2) {
+        phaseTitle = '第一阶段：气温下降，共同对流';
+        phaseDesc = '冷空气使海表降温。此时两种盐度的表面海水都在变冷、密度变大并下沉，产生垂直对流，上下层海水一起均匀变冷。';
+      } else if (envTemp > -1) {
+        phaseTitle = '第二阶段：低盐度达到最大密度';
+        phaseDesc = '【关键分歧】低盐海水的表面降至最大密度温度(约2°C)，继续变冷则密度反而变小，因此停止下沉，对流停止！而高盐海水仍在持续对流。';
+        phaseClass = 'phase' + ' yellow';
+      } else if (envTemp > -1.9) {
+        phaseTitle = '第三阶段：低盐度表面结冰';
+        phaseDesc = '低盐海水表面达到了冰点(-1°C)并开始结冰，但底层依然温暖(2°C)。高盐海水由于仍在全层混合，即使气温很低也难立刻结冰。';
+        phaseClass = 'phase' + ' cyan';
+      } else {
+        phaseTitle = '第四阶段：高盐度极寒爆发结冰';
+        phaseDesc = '气温极寒，高盐海水整个水柱终于都降至冰点(-1.9°C)。由于底层也非常寒冷，一旦开始结冰，冰层增长更快。';
+        phaseClass = 'phase' + ' indigo';
+      }
+
+      return {
+        lowSurfaceTemp, lowBottomTemp, lowConvecting, lowIceThickness,
+        highSurfaceTemp, highBottomTemp, highConvecting, highIceThickness,
+        phaseTitle, phaseDesc, phaseClass
+      };
+    }
+
+    function setBadge(el, text, kind) {
+      el.textContent = text;
+      el.className = 'badge ' + kind;
+    }
+
+    function render() {
+      const envTemp = 10 - (time / 100) * 14;
+      const state = computeState(envTemp);
+
+      dom.envTemp.textContent = `${envTemp.toFixed(1)}°C`;
+      dom.timeRange.value = String(time);
+      dom.phaseTitle.textContent = state.phaseTitle;
+      dom.phaseDesc.textContent = state.phaseDesc;
+
+      dom.phaseBox.style.background = '#eff6ff';
+      dom.phaseBox.style.borderColor = '#bfdbfe';
+      if (state.phaseClass.includes('yellow')) {
+        dom.phaseBox.style.background = '#fefce8';
+        dom.phaseBox.style.borderColor = '#fde68a';
+      }
+      if (state.phaseClass.includes('cyan')) {
+        dom.phaseBox.style.background = '#ecfeff';
+        dom.phaseBox.style.borderColor = '#a5f3fc';
+      }
+      if (state.phaseClass.includes('indigo')) {
+        dom.phaseBox.style.background = '#eef2ff';
+        dom.phaseBox.style.borderColor = '#c7d2fe';
+      }
+
+      dom.lowWater.setAttribute('fill', toWaterColor(state.lowSurfaceTemp));
+      dom.highWater.setAttribute('fill', toWaterColor(state.highSurfaceTemp));
+
+      dom.lowFlow.setAttribute('opacity', state.lowConvecting ? '1' : '0');
+      dom.highFlow.setAttribute('opacity', state.highConvecting ? '1' : '0');
+
+      dom.lowStop.setAttribute('visibility', (!state.lowConvecting && state.lowSurfaceTemp > PHYSICS.low.freezeTemp) ? 'visible' : 'hidden');
+      dom.highStop.setAttribute('visibility', (!state.highConvecting && state.highSurfaceTemp > PHYSICS.high.freezeTemp) ? 'visible' : 'hidden');
+
+      if (state.lowIceThickness > 0) {
+        dom.lowIce.setAttribute('visibility', 'visible');
+        dom.lowIce.setAttribute('d', buildIcePath(state.lowIceThickness));
+        dom.lowIceLabel.setAttribute('visibility', state.lowIceThickness > 10 ? 'visible' : 'hidden');
+        dom.lowIceLabel.setAttribute('y', String(23 + state.lowIceThickness / 2 + 5));
+      } else {
+        dom.lowIce.setAttribute('visibility', 'hidden');
+        dom.lowIceLabel.setAttribute('visibility', 'hidden');
+      }
+
+      if (state.highIceThickness > 0) {
+        dom.highIce.setAttribute('visibility', 'visible');
+        dom.highIce.setAttribute('d', buildIcePath(state.highIceThickness));
+        dom.highIceLabel.setAttribute('visibility', state.highIceThickness > 10 ? 'visible' : 'hidden');
+        dom.highIceLabel.setAttribute('y', String(23 + state.highIceThickness / 2 + 5));
+      } else {
+        dom.highIce.setAttribute('visibility', 'hidden');
+        dom.highIceLabel.setAttribute('visibility', 'hidden');
+      }
+
+      dom.lowSurface.textContent = `${state.lowSurfaceTemp.toFixed(1)}°C`;
+      dom.lowBottom.textContent = `${state.lowBottomTemp.toFixed(1)}°C`;
+      dom.highSurface.textContent = `${state.highSurfaceTemp.toFixed(1)}°C`;
+      dom.highBottom.textContent = `${state.highBottomTemp.toFixed(1)}°C`;
+
+      if (state.lowIceThickness > 0) setBadge(dom.lowState, '已结冰', 'ice');
+      else if (state.lowConvecting) setBadge(dom.lowState, '对流冷却中', 'flow');
+      else setBadge(dom.lowState, '达到最大密度', '');
+
+      if (state.highIceThickness > 0) setBadge(dom.highState, '已结冰', 'ice');
+      else if (state.highConvecting) setBadge(dom.highState, '对流冷却中', 'flow');
+      else setBadge(dom.highState, '达到最大密度', '');
+    }
+
+    function updatePlayButton() {
+      if (isPlaying) {
+        dom.playBtn.className = 'btn-pause';
+        dom.playIcon.textContent = '⏸';
+        dom.playText.textContent = '暂停';
+      } else {
+        dom.playBtn.className = 'btn-play';
+        dom.playIcon.textContent = '▶';
+        dom.playText.textContent = '播放降温';
+      }
+    }
+
+    function stopLoop() {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    function loop() {
+      if (!isPlaying) return;
+      time = Math.min(100, time + 0.15);
+      render();
+      if (time >= 100) {
+        isPlaying = false;
+        updatePlayButton();
+        stopLoop();
+        return;
+      }
+      rafId = requestAnimationFrame(loop);
+    }
+
+    dom.playBtn.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      updatePlayButton();
+      stopLoop();
+      if (isPlaying) rafId = requestAnimationFrame(loop);
+    });
+
+    dom.resetBtn.addEventListener('click', () => {
+      isPlaying = false;
+      time = 0;
+      updatePlayButton();
+      stopLoop();
+      render();
+    });
+
+    dom.timeRange.addEventListener('input', (event) => {
+      isPlaying = false;
+      updatePlayButton();
+      stopLoop();
+      time = Number(event.target.value);
+      render();
+    });
+
+    updatePlayButton();
+    render();
+  </script>
+</body>
+</html>
