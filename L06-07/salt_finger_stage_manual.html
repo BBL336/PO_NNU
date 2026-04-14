@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>盐指分阶段手动播放版</title>
+  <style>
+    :root {
+      --bg0: #f8fbff;
+      --bg1: #eaf2ff;
+      --ink: #111827;
+      --muted: #344054;
+      --accent: #0f766e;
+      --line: #d0d5dd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(1300px 900px at 20% 10%, #ffffff 0%, var(--bg0) 48%, var(--bg1) 100%);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+      color: var(--ink);
+      padding: 10px;
+    }
+
+    .stage {
+      width: min(1280px, 96vw);
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 10px 28px rgba(16, 24, 40, 0.1);
+      padding: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #98a2b3;
+    }
+
+    button.active {
+      background: #0f766e;
+      color: #fff;
+      border-color: #0f766e;
+    }
+
+    .status {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-left: 10px;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .core {
+      margin-top: 10px;
+      display: grid;
+      gap: 6px;
+      line-height: 1.35;
+      font-size: clamp(17px, 1.5vw, 24px);
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+    }
+
+    .core .line3 {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .explain {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fcfdff;
+      display: grid;
+      gap: 6px;
+    }
+
+    .explain-title {
+      font-size: clamp(18px, 1.6vw, 26px);
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .explain-text {
+      margin: 0;
+      font-size: clamp(17px, 1.5vw, 24px);
+      line-height: 1.55;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .explain-note {
+      margin: 0;
+      font-size: clamp(17px, 1.5vw, 24px);
+      line-height: 1.5;
+      color: #475467;
+      border-left: 3px solid #98a2b3;
+      padding-left: 8px;
+    }
+
+    .explain-final {
+      margin: 0;
+      font-size: clamp(19px, 1.7vw, 28px);
+      font-weight: 800;
+      line-height: 1.5;
+      color: #7a2e0e;
+      background: #fff4d6;
+      border: 2px solid #f7b955;
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      button {
+        font-size: 18px;
+        padding: 8px 14px;
+      }
+
+      .status {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="stage">
+    <div class="toolbar">
+      <button id="prevBtn">上一阶段</button>
+      <button id="nextBtn">下一阶段</button>
+      <button id="autoBtn">自动播放：关</button>
+      <button id="resetBtn">回到阶段1</button>
+      <span class="status" id="status">当前：阶段1（初始两层）</span>
+    </div>
+
+    <canvas id="scene" width="1260" height="600" aria-label="盐指形成分阶段动画"></canvas>
+
+    <section class="explain" aria-live="polite">
+      <div class="explain-title" id="explainTitle">阶段讲解：阶段1（初始两层）</div>
+      <p class="explain-text" id="explainText">初始两层是“整体静力稳定或近中性”的：上层高温高盐、下层低温低盐，且两层密度近似相同（都记为ρ1）。</p>
+      <p class="explain-note" id="explainNote">补充：第2、3层是界面附近的过渡层，不是长期稳定分层；它们持续被扩散与指状对流重塑。</p>
+      <p class="explain-final" id="explainFinal">长期结果：不会固定四层；常见为温盐阶梯或更均一、稳定的再分层。</p>
+    </section>
+
+    <div class="core">
+      <div>初始：上层(20℃, 35, ρ1)，下层(10℃, 25, ρ1)</div>
+      <div id="evolLine">演化：热扩散快于盐扩散，界面分裂为第2层(15℃, 35, ρ2)与第3层(15℃, 25, ρ3)</div>
+      <div id="assumeLine" style="color: red; font-weight: bold;">
+        极端假设：既然盐扩散慢，就假设盐度不变化！即在演化中形成盐度在第2层与初始上层相同，第3层与初始下层相同
+      </div>
+      <div class="line3" id="line3">关系：ρ2 &gt; ρ1 &gt; ρ3，触发盐指（左右键切阶段，空格切自动播放）</div>
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("scene");
+    const ctx = canvas.getContext("2d");
+    const line3 = document.getElementById("line3");
+    const evolLine = document.getElementById("evolLine");
+    const assumeLine = document.getElementById("assumeLine");
+    const statusEl = document.getElementById("status");
+    const explainTitle = document.getElementById("explainTitle");
+    const explainText = document.getElementById("explainText");
+    const explainNote = document.getElementById("explainNote");
+    const explainFinal = document.getElementById("explainFinal");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const autoBtn = document.getElementById("autoBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const stageAnchors = [0.18, 0.56, 1.0];
+    const stageNames = ["阶段1（初始两层）", "阶段2（界面分裂）", "阶段3（盐指增长）"];
+
+    let stageIndex = 0;
+    let t = stageAnchors[stageIndex];
+    let targetT = t;
+    let auto = false;
+    let last = performance.now();
+
+    function mix(a, b, p) { return a + (b - a) * p; }
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+    function stageProgress(v, a, b) { return clamp((v - a) / (b - a), 0, 1); }
+
+    function colorLerp(c1, c2, p) {
+      const m = c1.match(/\w\w/g).map((x) => parseInt(x, 16));
+      const n = c2.match(/\w\w/g).map((x) => parseInt(x, 16));
+      const r = Math.round(mix(m[0], n[0], p));
+      const g = Math.round(mix(m[1], n[1], p));
+      const b = Math.round(mix(m[2], n[2], p));
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function drawInitialPanel(x, y, w, h) {
+      const mid = y + h * 0.5;
+      ctx.fillStyle = "#f8c45d";
+      ctx.fillRect(x, y, w, h * 0.5);
+      ctx.fillStyle = "#7db8e6";
+      ctx.fillRect(x, mid, w, h * 0.5);
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(x, y, w, h);
+      ctx.beginPath();
+      ctx.moveTo(x, mid);
+      ctx.lineTo(x + w, mid);
+      ctx.stroke();
+
+      ctx.fillStyle = "#111";
+      ctx.font = "600 28px Microsoft YaHei, PingFang SC, sans-serif";
+      ctx.textAlign = "center";
+      const yTop = y + h * 0.28;
+      const yBottom = y + h * 0.78;
+      ctx.fillText("第1层：20℃，35，ρ1", x + w / 2, yTop);
+      ctx.font = "600 24px Microsoft YaHei, PingFang SC, sans-serif";
+      ctx.fillText("高温高盐", x + w / 2, yTop + 34);
+      ctx.font = "600 28px Microsoft YaHei, PingFang SC, sans-serif";
+      ctx.fillText("第2层：10℃，25，ρ1", x + w / 2, yBottom);
+      ctx.font = "600 24px Microsoft YaHei, PingFang SC, sans-serif";
+      ctx.fillText("低温低盐", x + w / 2, yBottom + 34);
+    }
+
+    function drawEvolvingPanel(x, y, w, h, progress) {
+      const pSplit = stageProgress(progress, 0.35, 0.75);
+      const pFinger = stageProgress(progress, 0.65, 1.0);
+
+      const y1 = y;
+      const y4 = y + h;
+      const baseMid = y + h * 0.5;
+
+      const l1Bottom = mix(baseMid, y + h * 0.26, pSplit);
+      const l2Bottom = mix(baseMid, y + h * 0.50, pSplit);
+      const l3Bottom = mix(baseMid, y + h * 0.74, pSplit);
+
+      ctx.fillStyle = "#f8c45d";
+      ctx.fillRect(x, y1, w, l1Bottom - y1);
+
+      ctx.fillStyle = colorLerp("f8c45d", "f3b565", pSplit);
+      ctx.fillRect(x, l1Bottom, w, l2Bottom - l1Bottom);
+
+      ctx.fillStyle = colorLerp("7db8e6", "78c2b2", pSplit);
+      ctx.fillRect(x, l2Bottom, w, l3Bottom - l2Bottom);
+
+      ctx.fillStyle = "#7db8e6";
+      ctx.fillRect(x, l3Bottom, w, y4 - l3Bottom);
+
+      if (pFinger > 0.02) {
+        const amp = 10 + 34 * pFinger;
+        const fingers = 6;
+        ctx.fillStyle = "#f0b46f";
+        for (let i = 0; i < fingers; i++) {
+          const fx = x + (i + 0.55) * (w / fingers);
+          const phase = i * 0.8 + progress * 11;
+          const localAmp = amp * (0.8 + 0.2 * Math.sin(phase));
+          ctx.beginPath();
+          ctx.moveTo(fx - 22, l2Bottom);
+          ctx.bezierCurveTo(fx - 18, l2Bottom + localAmp * 0.2, fx - 12, l2Bottom + localAmp, fx, l2Bottom + localAmp);
+          ctx.bezierCurveTo(fx + 12, l2Bottom + localAmp, fx + 18, l2Bottom + localAmp * 0.2, fx + 22, l2Bottom);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(x, y, w, h);
+      const lines = [l1Bottom, l2Bottom, l3Bottom];
+      ctx.beginPath();
+      lines.forEach((yy) => {
+        ctx.moveTo(x, yy);
+        ctx.lineTo(x + w, yy);
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = "#111";
+      ctx.font = "600 28px Microsoft YaHei, PingFang SC, sans-serif";
+      ctx.textAlign = "center";
+      const yL1 = y + (l1Bottom - y) * 0.55;
+      ctx.fillText("第1层：20℃，35，ρ1", x + w / 2, yL1);
+      ctx.font = "600 24px Microsoft YaHei, PingFang SC, sans-serif";
+      ctx.fillText("高温高盐", x + w / 2, yL1 + 32);
+      ctx.font = "600 28px Microsoft YaHei, PingFang SC, sans-serif";
+      if (pSplit > 0.05) {
+        const yL2 = l1Bottom + (l2Bottom - l1Bottom) * 0.62;
+        const yL3 = l2Bottom + (l3Bottom - l2Bottom) * 0.62;
+        ctx.fillText("第2层：15℃，35，ρ2", x + w / 2, yL2);
+        ctx.fillText("第3层：15℃，25，ρ3", x + w / 2, yL3);
+      }
+      const yBottom = l3Bottom + (y4 - l3Bottom) * 0.62;
+      if (progress < 0.35) {
+        ctx.fillText("第2层：10℃，25，ρ1", x + w / 2, yBottom);
+        ctx.font = "600 24px Microsoft YaHei, PingFang SC, sans-serif";
+        ctx.fillText("低温低盐", x + w / 2, yBottom + 32);
+        ctx.font = "600 28px Microsoft YaHei, PingFang SC, sans-serif";
+      } else {
+        ctx.fillText("第4层：10℃，25，ρ1", x + w / 2, yBottom);
+        ctx.font = "600 24px Microsoft YaHei, PingFang SC, sans-serif";
+        ctx.fillText("低温低盐", x + w / 2, yBottom + 32);
+        ctx.font = "600 28px Microsoft YaHei, PingFang SC, sans-serif";
+      }
+    }
+
+    function drawGuideLines(x1, y1, x2, y2, progress) {
+      const alpha = 0.32 + 0.58 * stageProgress(progress, 0.25, 0.9);
+      ctx.strokeStyle = `rgba(17,17,17,${alpha.toFixed(3)})`;
+      ctx.lineWidth = 2;
+      const ys = [0.23, 0.50, 0.77];
+      ys.forEach((k) => {
+        const a = y1 + 420 * k;
+        const b = y2 + 420 * k;
+        ctx.beginPath();
+        ctx.moveTo(x1, a);
+        ctx.lineTo(x2, b);
+        ctx.stroke();
+      });
+    }
+
+    function refreshText(progress) {
+      const pSplit = stageProgress(progress, 0.35, 0.75);
+      const pFinger = stageProgress(progress, 0.65, 1.0);
+      if (progress < 0.35) {
+        line3.textContent = "关系：上下两层近中性，界面开始发生双扩散";
+        evolLine.style.display = "none";
+        assumeLine.style.display = "none";
+        statusEl.textContent = "当前：阶段1（初始两层）";
+        explainTitle.textContent = "阶段讲解：阶段1（初始两层）";
+        explainText.textContent = "初始两层是“整体静力稳定或近中性”的：上层高温高盐、下层低温低盐，且两层密度近似相同（都记为ρ1）。";
+        explainNote.style.display = "none";
+        explainFinal.style.display = "none";
+      } else if (progress < 0.75) {
+        line3.textContent = `关系：中间两层形成中（${Math.round(pSplit * 100)}%），密度反转逐步建立`;
+        evolLine.style.display = "block";
+        assumeLine.style.display = "block";
+        statusEl.textContent = "当前：阶段2（界面分裂）";
+        explainTitle.textContent = "阶段讲解：阶段2（双扩散分层）";
+        explainText.textContent = "由于热扩散比盐扩散快，界面两侧先发生“温度先变、盐度后变”。上侧界面水体先降温但仍高盐，变成第2层（15℃, 35），密度增大为ρ2，满足ρ2 > ρ1。下侧界面水体先升温但仍低盐，变成第3层（15℃, 25），密度减小为ρ3，满足ρ3 < ρ1。";
+        explainNote.style.display = "block";
+        explainFinal.style.display = "none";
+      } else {
+        line3.textContent = `关系：ρ2 > ρ1 > ρ3，盐指增长中（${Math.round(pFinger * 100)}%）`;
+        evolLine.style.display = "block";
+        assumeLine.style.display = "block";
+        statusEl.textContent = "当前：阶段3（盐指增长）";
+        explainTitle.textContent = "阶段讲解：阶段3（盐指触发）";
+        explainText.textContent = "于是出现局地密度反转：ρ2 > ρ1 > ρ3，触发细尺度对流交换，即盐指（高盐冷指下沉、低盐暖指上升）。";
+        explainNote.style.display = "block";
+        explainFinal.style.display = "block";
+      }
+      autoBtn.textContent = auto ? "自动播放：开" : "自动播放：关";
+      autoBtn.classList.toggle("active", auto);
+    }
+
+    function draw(progress) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const left = { x: 70, y: 120, w: 440, h: 420 };
+      const right = { x: 750, y: 105, w: 440, h: 450 };
+
+      ctx.fillStyle = "#111";
+      ctx.font = "600 56px Microsoft YaHei, PingFang SC, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("初始状态", left.x + left.w / 2, 72);
+      ctx.fillText("演化过程", right.x + right.w / 2, 72);
+
+      drawInitialPanel(left.x, left.y, left.w, left.h);
+      drawEvolvingPanel(right.x, right.y, right.w, right.h, progress);
+      drawGuideLines(left.x + left.w, left.y, right.x, right.y, progress);
+    }
+
+    function goStage(index) {
+      stageIndex = clamp(index, 0, stageAnchors.length - 1);
+      targetT = stageAnchors[stageIndex];
+    }
+
+    function tick(now) {
+      const dt = (now - last) / 1000;
+      last = now;
+
+      if (auto) {
+        targetT += dt * 0.035;
+        if (targetT > 1) targetT -= 1;
+      }
+
+      const smooth = Math.min(1, dt * 4);
+      t = t + (targetT - t) * smooth;
+
+      draw(t);
+      refreshText(t);
+      requestAnimationFrame(tick);
+    }
+
+    prevBtn.addEventListener("click", () => {
+      auto = false;
+      goStage(stageIndex - 1);
+    });
+
+    nextBtn.addEventListener("click", () => {
+      auto = false;
+      goStage(stageIndex + 1);
+    });
+
+    resetBtn.addEventListener("click", () => {
+      auto = false;
+      goStage(0);
+    });
+
+    autoBtn.addEventListener("click", () => {
+      auto = !auto;
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        auto = false;
+        goStage(stageIndex - 1);
+      }
+      if (e.code === "ArrowRight") {
+        e.preventDefault();
+        auto = false;
+        goStage(stageIndex + 1);
+      }
+      if (e.code === "Space") {
+        e.preventDefault();
+        auto = !auto;
+      }
+      if (e.code === "Home") {
+        e.preventDefault();
+        auto = false;
+        goStage(0);
+      }
+    });
+
+    draw(t);
+    refreshText(t);
+    requestAnimationFrame(tick);
+  </script>
+</body>
+
+</html>
